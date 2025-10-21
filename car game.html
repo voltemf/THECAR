@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VROOM</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            overflow: hidden;
+        }
+        #gameCanvas {
+            display: block;
+            width: 100%;
+            height: 100vh;
+        }
+        #mainMenu, #garage, #trackSelect {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(20, 20, 30, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            border: 2px solid #ff6600;
+            text-align: center;
+            z-index: 100;
+            min-width: 400px;
+        }
+        h1 {
+            color: #ff6600;
+            margin-bottom: 20px;
+            font-size: 48px;
+            text-shadow: 0 0 20px #ff6600;
+        }
+        h2 {
+            color: #ff6600;
+            margin-bottom: 20px;
+            font-size: 32px;
+        }
+        button {
+            background: linear-gradient(135deg, #ff6600, #ff9933);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            margin: 10px;
+            font-size: 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px #ff6600;
+        }
+        button:disabled {
+            background: #555;
+            cursor: not-allowed;
+            transform: scale(1);
+            box-shadow: none;
+        }
+        #hud {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 20px;
+            text-shadow: 2px 2px 4px #000;
+            z-index: 50;
+        }
+        #driftInfo {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            text-align: right;
+            font-size: 24px;
+            text-shadow: 2px 2px 4px #000;
+            z-index: 50;
+        }
+        .drift-active {
+            color: #ff6600;
+            font-size: 32px;
+            animation: pulse 0.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        #combo {
+            color: #ffcc00;
+            font-size: 48px;
+            font-weight: bold;
+        }
+        .car-option, .track-option {
+            background: rgba(40, 40, 50, 0.8);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: 2px solid #444;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .car-option:hover, .track-option:hover {
+            border-color: #ff6600;
+            transform: translateX(5px);
+        }
+        .car-option.selected, .track-option.selected {
+            border-color: #ff6600;
+            background: rgba(255, 102, 0, 0.2);
+        }
+        .upgrade-section {
+            margin: 20px 0;
+            text-align: left;
+        }
+        .upgrade-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: rgba(40, 40, 50, 0.6);
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+        .upgrade-bar {
+            width: 200px;
+            height: 10px;
+            background: #333;
+            border-radius: 5px;
+            margin: 0 10px;
+            overflow: hidden;
+        }
+        .upgrade-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6600, #ffcc00);
+            transition: width 0.3s;
+        }
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            font-size: 16px;
+            text-shadow: 2px 2px 4px #000;
+            z-index: 50;
+        }
+        #minimap {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 200px;
+            height: 200px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid #ff6600;
+            border-radius: 10px;
+            z-index: 50;
+        }
+        #speedometer {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #ff6600;
+            border-radius: 10px;
+            padding: 15px;
+            font-family: 'Arial', sans-serif;
+            color: #fff;
+            text-align: center;
+            z-index: 100;
+            min-width: 120px;
+        }
+        #speedometer .speed-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #ff6600;
+            text-shadow: 0 0 10px #ff6600;
+        }
+        #speedometer .speed-unit {
+            font-size: 14px;
+            color: #ccc;
+        }
+        #gearDisplay {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #ff6600;
+            border-radius: 10px;
+            padding: 15px;
+            font-family: 'Arial', sans-serif;
+            color: #fff;
+            text-align: center;
+            z-index: 100;
+            min-width: 80px;
+        }
+        #gearDisplay .gear-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #ff6600;
+            text-shadow: 0 0 10px #ff6600;
+        }
+        #gearDisplay .gear-label {
+            font-size: 12px;
+            color: #ccc;
+        }
+        #nitroDisplay {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ff00;
+            border-radius: 10px;
+            padding: 15px;
+            font-family: 'Arial', sans-serif;
+            color: #fff;
+            text-align: center;
+            z-index: 100;
+            min-width: 120px;
+        }
+        #nitroDisplay .nitro-bar {
+            width: 100px;
+            height: 10px;
+            background: #333;
+            border-radius: 5px;
+            margin: 5px 0;
+            overflow: hidden;
+        }
+        #nitroDisplay .nitro-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff00, #ffff00);
+            transition: width 0.1s;
+        }
+        .nitro-active {
+            animation: nitroFlash 0.5s infinite;
+        }
+        @keyframes nitroFlash {
+            0%, 100% { border-color: #00ff00; }
+            50% { border-color: #ffff00; }
+        }
+        
+        /* Mobile Controls */
+        #mobileControls {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 200px;
+            background: rgba(0, 0, 0, 0.3);
+            display: none;
+            z-index: 200;
+        }
+        
+        .mobile-joystick {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 120px;
+            height: 120px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid #ff6600;
+            border-radius: 50%;
+            touch-action: none;
+        }
+        
+        .mobile-joystick-handle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 40px;
+            height: 40px;
+            background: #ff6600;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.1s;
+        }
+        
+        .mobile-buttons {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .mobile-button {
+            width: 80px;
+            height: 60px;
+            background: rgba(255, 102, 0, 0.8);
+            border: 2px solid #ff6600;
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: manipulation;
+            user-select: none;
+        }
+        
+        .mobile-button:active {
+            background: rgba(255, 102, 0, 1);
+            transform: scale(0.95);
+        }
+        
+        @media (max-width: 768px) {
+            #mobileControls {
+                display: block;
+            }
+            
+            #speedometer {
+                bottom: 220px;
+            }
+            
+            #nitroDisplay {
+                top: 20px;
+                right: 20px;
+            }
+        }
+    </style>
+    </head>
+<body>
+    <div id="speedometer">
+        <div class="speed-value" id="speedValue">0</div>
+        <div class="speed-unit">km/h</div>
+    </div>
+    
+    <div id="nitroDisplay">
+        <div>NITRO</div>
+        <div class="nitro-bar">
+            <div class="nitro-fill" id="nitroFill" style="width: 100%;"></div>
+        </div>
+        <div id="nitroTime">READY</div>
+    </div>
+    
+    <!-- Mobile Controls -->
+    <div id="mobileControls">
+        <div class="mobile-joystick" id="joystick">
+            <div class="mobile-joystick-handle" id="joystickHandle"></div>
+        </div>
+        <div class="mobile-buttons">
+            <div class="mobile-button" id="nitroBtn">NITRO</div>
+            <div class="mobile-button" id="brakeBtn">BRAKE</div>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script>
+        let scene, camera, renderer, playerCar;
+        let keys = {};
+        let carVelocity = new THREE.Vector3();
+        let carRotation = 0;
+        let currentSpeed = 0;
+        let trackObjects = [];
+        let gltfLoader = null;
+        
+        // Camera constraints
+        const MAX_CAMERA_DISTANCE = 20;
+        const MIN_CAMERA_DISTANCE = 12;
+        const CAMERA_HEIGHT = 10;
+        
+        // Mouse controls
+        let isMouseDown = false;
+        let mouseX = 0;
+        let mouseY = 0;
+        let cameraOffsetX = 0;
+        let cameraOffsetY = 0;
+        let targetOffsetX = 0;
+        let targetOffsetY = 0;
+        
+        // Nitro system
+        let nitroActive = false;
+        let nitroTimeLeft = 0;
+        const NITRO_DURATION = 10; // 10 seconds
+        const NITRO_MULTIPLIER = 2.5;
+        
+        // Mobile controls
+        let joystickActive = false;
+        let joystickCenter = { x: 0, y: 0 };
+        let joystickInput = { x: 0, y: 0 };
+        let mobileNitro = false;
+        let mobileBrake = false;
+
+        function init() {
+            scene = new THREE.Scene();
+            scene.fog = new THREE.Fog(0x87CEEB, 100, 400);
+            scene.background = new THREE.Color(0x87CEEB);
+            
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 6, 12);
+            
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            document.body.appendChild(renderer.domElement);
+            
+            // Initialize GLB loader
+            gltfLoader = new THREE.GLTFLoader();
+            
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            dirLight.position.set(100, 150, 50);
+            dirLight.castShadow = true;
+            dirLight.shadow.camera.left = -200;
+            dirLight.shadow.camera.right = 200;
+            dirLight.shadow.camera.top = 200;
+            dirLight.shadow.camera.bottom = -200;
+            dirLight.shadow.camera.far = 500;
+            dirLight.shadow.mapSize.width = 2048;
+            dirLight.shadow.mapSize.height = 2048;
+            scene.add(dirLight);
+            
+            createTrack('parkrug');
+            createPlayerCar();
+            
+            window.addEventListener('resize', onWindowResize);
+            document.addEventListener('keydown', onKeyDown);
+            document.addEventListener('keyup', onKeyUp);
+            
+            // Mouse controls
+            document.addEventListener('mousedown', onMouseDown);
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+            document.addEventListener('contextmenu', (e) => e.preventDefault()); // Disable right-click menu
+            
+            // Mobile controls
+            initMobileControls();
+            
+            animate();
+        }
+        
+        // Function to load GLB models
+        function loadGLBModel(url, position = { x: 0, y: 0, z: 0 }, scale = 1) {
+            return new Promise((resolve, reject) => {
+                gltfLoader.load(
+                    url,
+                    (gltf) => {
+                        const model = gltf.scene;
+                        model.position.set(position.x, position.y, position.z);
+                        model.scale.set(scale, scale, scale);
+                        
+                        // Enable shadows for all meshes in the model
+                        model.traverse((child) => {
+                            if (child.isMesh) {
+                                child.castShadow = true;
+                                child.receiveShadow = true;
+                            }
+                        });
+                        
+                        scene.add(model);
+                        console.log('GLB model loaded successfully:', url);
+                        resolve(model);
+                    },
+                    (progress) => {
+                        const percent = (progress.loaded / progress.total * 100).toFixed(2);
+                        console.log(`Loading GLB: ${percent}%`);
+                    },
+                    (error) => {
+                        console.error('Error loading GLB model:', error);
+                        reject(error);
+                    }
+                );
+            });
+        }
+        
+        // Example: Load a car model from GLB file
+        // Uncomment and provide your GLB file path to use
+        // loadGLBModel('path/to/your/car.glb', { x: 10, y: 0, z: 10 }, 2);
+
+        function createPlayerCar() {
+            if (playerCar) scene.remove(playerCar);
+            
+            const carGroup = new THREE.Group();
+            
+            // Load the GLTF model from MB folder
+            if (gltfLoader) {
+                gltfLoader.load(
+                    'MB/scene.gltf',
+                    (gltf) => {
+                        const model = gltf.scene;
+                        
+                        // Scale the model to make it larger
+                        model.scale.set(3, 3, 3);
+                        
+                        // Try no rotation first (remove the 180 degree rotation)
+                        // model.rotation.y = 0; // This is the default, so we can omit it
+                        
+                        // Center the model and lift it up so wheels touch ground
+                        const box = new THREE.Box3().setFromObject(model);
+                        const center = box.getCenter(new THREE.Vector3());
+                        const size = box.getSize(new THREE.Vector3());
+                        
+                        // Center horizontally but lift vertically
+                        model.position.set(-center.x, -box.min.y + 0.2, -center.z);
+                        
+                        // Configure the model
+                        model.traverse((child) => {
+                            if (child.isMesh) {
+                                child.castShadow = true;
+                                child.receiveShadow = true;
+                                
+                                // Make the car brighter
+                                if (child.material) {
+                                    // If it's an array of materials
+                                    if (Array.isArray(child.material)) {
+                                        child.material.forEach(mat => {
+                                            mat.emissive = new THREE.Color(0x222222); // Add slight glow
+                                            mat.emissiveIntensity = 0.3;
+                                        });
+                                    } else {
+                                        // Single material
+                                        child.material.emissive = new THREE.Color(0x222222);
+                                        child.material.emissiveIntensity = 0.3;
+                                    }
+                                }
+                            }
+                        });
+                        
+                        // Add model to car group
+                        carGroup.add(model);
+                        console.log('Car model loaded successfully');
+                    },
+                    (progress) => {
+                        if (progress.total > 0) {
+                            const percent = (progress.loaded / progress.total * 100).toFixed(2);
+                            console.log(`Loading car model: ${percent}%`);
+                        }
+                    },
+                    (error) => {
+                        console.error('Error loading GLTF car model:', error);
+                        console.log('Using fallback basic car');
+                        // Fallback to basic car if model fails to load
+                        createBasicCar(carGroup);
+                    }
+                );
+            } else {
+                // Fallback to basic car if loader not ready
+                createBasicCar(carGroup);
+            }
+            
+            carGroup.position.set(0, 0, 0);
+            scene.add(carGroup);
+            playerCar = carGroup;
+            
+            // Reset camera to follow the car immediately
+            camera.position.set(0, CAMERA_HEIGHT, MIN_CAMERA_DISTANCE);
+            camera.lookAt(0, 0, 0);
+            
+            // Initialize displays
+            updateNitroDisplay();
+        }
+        
+        function createBasicCar(carGroup) {
+            const bodyGeom = new THREE.BoxGeometry(2, 1, 4);
+            const bodyMat = new THREE.MeshPhongMaterial({ 
+                color: 0xff6600,
+                shininess: 100
+            });
+            const body = new THREE.Mesh(bodyGeom, bodyMat);
+            body.position.y = 0.5;
+            body.castShadow = true;
+            carGroup.add(body);
+            
+            const roofGeom = new THREE.BoxGeometry(1.5, 0.8, 2);
+            const roof = new THREE.Mesh(roofGeom, bodyMat);
+            roof.position.set(0, 1.3, -0.3);
+            roof.castShadow = true;
+            carGroup.add(roof);
+            
+            const hoodGeom = new THREE.BoxGeometry(1.8, 0.2, 1.5);
+            const hood = new THREE.Mesh(hoodGeom, bodyMat);
+            hood.position.set(0, 0.95, 1.5);
+            hood.castShadow = true;
+            carGroup.add(hood);
+            
+            const wheelGeom = new THREE.CylinderGeometry(0.4, 0.4, 0.3, 16);
+            const wheelMat = new THREE.MeshPhongMaterial({ color: 0x111111 });
+            
+            const wheels = [];
+            const wheelPos = [
+                [-1.1, 0.4, 1.5], [1.1, 0.4, 1.5],
+                [-1.1, 0.4, -1.5], [1.1, 0.4, -1.5]
+            ];
+            
+            wheelPos.forEach(pos => {
+                const wheel = new THREE.Mesh(wheelGeom, wheelMat);
+                wheel.rotation.z = Math.PI / 2;
+                wheel.position.set(...pos);
+                wheel.castShadow = true;
+                carGroup.add(wheel);
+                wheels.push(wheel);
+            });
+            
+            carGroup.userData.wheels = wheels;
+        }
+
+        function createTrack(type) {
+            trackObjects.forEach(obj => scene.remove(obj));
+            trackObjects = [];
+            
+            // Load the PARKRUG map instead of creating procedural track
+            if (gltfLoader) {
+                gltfLoader.load(
+                    'PARKRUG/traffic_rug/scene.gltf',
+                    (gltf) => {
+                        const mapModel = gltf.scene;
+                        
+                        // Scale the map up by 500x to make it large
+                        mapModel.scale.set(500, 500, 500);
+                        
+                        // Flatten the map by removing any rotation/tilt and centering
+                        mapModel.rotation.set(0, 0, 0);
+                        mapModel.position.set(0, 0, 0); // Center and ensure it's at ground level
+                        
+                        // Force flatten all child meshes
+                        mapModel.traverse((child) => {
+                            if (child.isMesh) {
+                                child.rotation.set(0, 0, 0);
+                                // Reset any local transformations that might cause tilting
+                                child.position.y = Math.max(child.position.y, 0);
+                            }
+                        });
+                        
+                        // Configure the map model
+                        mapModel.traverse((child) => {
+                            if (child.isMesh) {
+                                child.receiveShadow = true;
+                                child.castShadow = true;
+                            }
+                        });
+                        
+                        // Add map to scene
+                        scene.add(mapModel);
+                        trackObjects.push(mapModel);
+                        
+                        console.log('PARKRUG map loaded successfully (scaled 500x, flattened)');
+                    },
+                    (progress) => {
+                        if (progress.total > 0) {
+                            const percent = (progress.loaded / progress.total * 100).toFixed(2);
+                            console.log(`Loading map: ${percent}%`);
+                        }
+                    },
+                    (error) => {
+                        console.error('Error loading PARKRUG map:', error);
+                        console.log('Creating fallback ground plane');
+                        createFallbackGround();
+                    }
+                );
+            } else {
+                createFallbackGround();
+            }
+        }
+        
+        function createFallbackGround() {
+            // Fallback ground plane if GLTF fails to load
+            const groundGeom = new THREE.PlaneGeometry(500, 500);
+            const groundMat = new THREE.MeshPhongMaterial({ color: 0x228B22 });
+            const ground = new THREE.Mesh(groundGeom, groundMat);
+            ground.rotation.x = -Math.PI / 2;
+            ground.position.y = -0.1;
+            ground.receiveShadow = true;
+            scene.add(ground);
+            trackObjects.push(ground);
+        }
+
+
+
+        function updateCarPhysics() {
+            if (!playerCar) return; // Don't update if car isn't loaded yet
+            
+            // Update nitro system
+            if (nitroActive && nitroTimeLeft > 0) {
+                nitroTimeLeft -= 0.016; // Decrease by frame time
+                if (nitroTimeLeft <= 0) {
+                    nitroActive = false;
+                    nitroTimeLeft = 0;
+                }
+            }
+            
+            // Base engine power with nitro multiplier
+            let enginePower = 50;
+            if (nitroActive) {
+                enginePower *= NITRO_MULTIPLIER;
+            }
+            
+            const brakePower = 0.3;
+            
+            let acceleration = 0;
+            let turnSpeed = 0.02;
+            
+            // Keyboard controls
+            if (keys['w'] || keys['arrowup']) {
+                acceleration = enginePower / 1000; // Forward
+            }
+            if (keys['s'] || keys['arrowdown']) {
+                acceleration = -enginePower / 1000; // Backward
+                currentSpeed *= 0.95;
+            }
+            
+            if (keys['a'] || keys['arrowleft']) {
+                turnSpeed *= (1 + currentSpeed / 150);
+                carRotation += turnSpeed;
+            }
+            if (keys['d'] || keys['arrowright']) {
+                turnSpeed *= (1 + currentSpeed / 150);
+                carRotation -= turnSpeed;
+            }
+            
+            if (keys[' '] && currentSpeed > 20) {
+                carRotation += (keys['a'] || keys['arrowleft'] ? 0.06 : keys['d'] || keys['arrowright'] ? -0.06 : 0);
+            }
+            
+            // Mobile controls (joystick)
+            if (joystickActive) {
+                // Forward/backward based on joystick Y
+                if (joystickInput.y > 0.1) {
+                    acceleration = enginePower / 1000 * joystickInput.y; // Forward
+                } else if (joystickInput.y < -0.1) {
+                    acceleration = enginePower / 1000 * joystickInput.y; // Backward
+                    currentSpeed *= 0.95;
+                }
+                
+                // Turning based on joystick X
+                if (Math.abs(joystickInput.x) > 0.1) {
+                    turnSpeed *= (1 + currentSpeed / 150);
+                    carRotation -= turnSpeed * joystickInput.x;
+                }
+            }
+            
+            // Mobile brake button
+            if (mobileBrake) {
+                currentSpeed *= 0.9;
+                if (currentSpeed > 20) {
+                    carRotation += joystickInput.x * 0.06;
+                }
+            }
+            
+            const forward = new THREE.Vector3(
+                Math.sin(carRotation),
+                0,
+                Math.cos(carRotation)
+            );
+            
+            carVelocity.add(forward.multiplyScalar(acceleration));
+            carVelocity.multiplyScalar(0.985);
+            
+            currentSpeed = carVelocity.length() * 100;
+            
+            playerCar.position.add(carVelocity);
+            playerCar.rotation.y = carRotation;
+            
+            if (playerCar.userData.wheels) {
+                playerCar.userData.wheels.forEach(wheel => {
+                    wheel.rotation.x -= currentSpeed * 0.08;
+                });
+            }
+            
+            // Update camera offsets - return to neutral when not dragging
+            if (!isMouseDown) {
+                targetOffsetX *= 0.95; // Gradually return to center
+                targetOffsetY *= 0.95;
+            }
+            
+            // Smooth interpolation of camera offsets
+            cameraOffsetX = THREE.MathUtils.lerp(cameraOffsetX, targetOffsetX, 0.1);
+            cameraOffsetY = THREE.MathUtils.lerp(cameraOffsetY, targetOffsetY, 0.1);
+            
+            // Calculate desired camera distance based on speed
+            const speedFactor = Math.min(currentSpeed / 100, 1);
+            const desiredDistance = MIN_CAMERA_DISTANCE + (MAX_CAMERA_DISTANCE - MIN_CAMERA_DISTANCE) * speedFactor * 0.6;
+            
+            // Calculate base camera position behind the car
+            const baseAngle = carRotation + cameraOffsetX * 0.01; // Add horizontal offset
+            const baseHeight = CAMERA_HEIGHT + cameraOffsetY * 0.01; // Add vertical offset
+            
+            const targetCamPos = new THREE.Vector3(
+                playerCar.position.x - Math.sin(baseAngle) * desiredDistance,
+                playerCar.position.y + baseHeight,
+                playerCar.position.z - Math.cos(baseAngle) * desiredDistance
+            );
+            
+            // Smoothly interpolate camera position
+            camera.position.lerp(targetCamPos, 0.15);
+            
+            // Ensure camera doesn't get too far from the car
+            const actualDistance = camera.position.distanceTo(playerCar.position);
+            if (actualDistance > MAX_CAMERA_DISTANCE) {
+                const direction = new THREE.Vector3().subVectors(camera.position, playerCar.position).normalize();
+                camera.position.copy(playerCar.position).add(direction.multiplyScalar(MAX_CAMERA_DISTANCE));
+            }
+            
+            // Look directly at the car (pointing down towards it)
+            camera.lookAt(playerCar.position.x, playerCar.position.y, playerCar.position.z);
+            
+            // Update UI displays
+            document.getElementById('speedValue').textContent = Math.round(currentSpeed);
+            updateNitroDisplay();
+        }
+        
+        function updateNitroDisplay() {
+            const nitroFill = document.getElementById('nitroFill');
+            const nitroTime = document.getElementById('nitroTime');
+            const nitroDisplay = document.getElementById('nitroDisplay');
+            
+            if (nitroActive) {
+                const percentage = (nitroTimeLeft / NITRO_DURATION) * 100;
+                nitroFill.style.width = percentage + '%';
+                nitroTime.textContent = Math.ceil(nitroTimeLeft) + 's';
+                nitroDisplay.classList.add('nitro-active');
+            } else {
+                nitroFill.style.width = '100%';
+                nitroTime.textContent = 'READY';
+                nitroDisplay.classList.remove('nitro-active');
+            }
+        }
+
+        function onKeyDown(e) {
+            keys[e.key.toLowerCase()] = true;
+            
+            // Nitro activation
+            if (e.key === 'Shift' && !nitroActive && nitroTimeLeft === 0) {
+                nitroActive = true;
+                nitroTimeLeft = NITRO_DURATION;
+            }
+        }
+        
+        function activateNitro() {
+            if (!nitroActive && nitroTimeLeft === 0) {
+                nitroActive = true;
+                nitroTimeLeft = NITRO_DURATION;
+            }
+        }
+
+        function onKeyUp(e) {
+            keys[e.key.toLowerCase()] = false;
+        }
+        
+        function onMouseDown(e) {
+            isMouseDown = true;
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        }
+        
+        function onMouseMove(e) {
+            if (isMouseDown) {
+                const deltaX = e.clientX - mouseX;
+                const deltaY = e.clientY - mouseY;
+                
+                // Update target offsets based on mouse movement (fix reversed controls)
+                targetOffsetX = Math.max(-200, Math.min(200, -deltaX)); // Reverse horizontal
+                targetOffsetY = Math.max(-100, Math.min(100, deltaY)); // Don't invert Y
+            }
+        }
+        
+        function onMouseUp(e) {
+            isMouseDown = false;
+            // Target offsets will gradually return to 0 in updateCarPhysics
+        }
+        
+        function initMobileControls() {
+            const joystick = document.getElementById('joystick');
+            const joystickHandle = document.getElementById('joystickHandle');
+            const nitroBtn = document.getElementById('nitroBtn');
+            const brakeBtn = document.getElementById('brakeBtn');
+            
+            // Get joystick center position
+            const joystickRect = joystick.getBoundingClientRect();
+            joystickCenter.x = joystickRect.left + joystickRect.width / 2;
+            joystickCenter.y = joystickRect.top + joystickRect.height / 2;
+            
+            // Joystick touch events
+            joystick.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                joystickActive = true;
+                handleJoystickMove(e.touches[0]);
+            });
+            
+            joystick.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                if (joystickActive) {
+                    handleJoystickMove(e.touches[0]);
+                }
+            });
+            
+            joystick.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                joystickActive = false;
+                joystickInput.x = 0;
+                joystickInput.y = 0;
+                joystickHandle.style.transform = 'translate(-50%, -50%)';
+            });
+            
+            // Button events
+            nitroBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                mobileNitro = true;
+                activateNitro();
+            });
+            
+            nitroBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                mobileNitro = false;
+            });
+            
+            brakeBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                mobileBrake = true;
+            });
+            
+            brakeBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                mobileBrake = false;
+            });
+            
+            // Update joystick center on window resize
+            window.addEventListener('resize', () => {
+                const rect = joystick.getBoundingClientRect();
+                joystickCenter.x = rect.left + rect.width / 2;
+                joystickCenter.y = rect.top + rect.height / 2;
+            });
+        }
+        
+        function handleJoystickMove(touch) {
+            const deltaX = touch.clientX - joystickCenter.x;
+            const deltaY = touch.clientY - joystickCenter.y;
+            const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+            const maxDistance = 40; // Half of joystick radius
+            
+            if (distance <= maxDistance) {
+                joystickInput.x = deltaX / maxDistance;
+                joystickInput.y = -deltaY / maxDistance; // Invert Y for forward/backward
+                
+                document.getElementById('joystickHandle').style.transform = 
+                    `translate(${-50 + (deltaX / maxDistance) * 50}%, ${-50 + (deltaY / maxDistance) * 50}%)`;
+            } else {
+                const angle = Math.atan2(deltaY, deltaX);
+                const constrainedX = Math.cos(angle) * maxDistance;
+                const constrainedY = Math.sin(angle) * maxDistance;
+                
+                joystickInput.x = constrainedX / maxDistance;
+                joystickInput.y = -constrainedY / maxDistance;
+                
+                document.getElementById('joystickHandle').style.transform = 
+                    `translate(${-50 + (constrainedX / maxDistance) * 50}%, ${-50 + (constrainedY / maxDistance) * 50}%)`;
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            updateCarPhysics();
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        init();
+    </script>
+</body>
+</html>
+    </script>
+</body>
+</html>
