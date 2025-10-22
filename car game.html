@@ -245,6 +245,32 @@
             50% { border-color: #ffff00; }
         }
         
+        #carDisplay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #ff6600;
+            border-radius: 10px;
+            padding: 15px;
+            font-family: 'Arial', sans-serif;
+            color: #fff;
+            text-align: center;
+            z-index: 100;
+            min-width: 150px;
+        }
+        #carDisplay .car-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: #ff6600;
+            text-shadow: 0 0 10px #ff6600;
+        }
+        #carDisplay .car-instruction {
+            font-size: 12px;
+            color: #ccc;
+            margin-top: 5px;
+        }
+        
         /* Mobile Controls */
         #mobileControls {
             position: fixed;
@@ -341,6 +367,11 @@
         <div id="nitroTime">READY</div>
     </div>
     
+    <div id="carDisplay">
+        <div class="car-name" id="carName">MB Car</div>
+        <div class="car-instruction">Press T to switch</div>
+    </div>
+    
     <!-- Mobile Controls -->
     <div id="mobileControls">
         <div class="mobile-joystick" id="joystick">
@@ -388,6 +419,13 @@
         let joystickInput = { x: 0, y: 0 };
         let mobileNitro = false;
         let mobileBrake = false;
+        
+        // Car switching system
+        let currentCarIndex = 0;
+        const availableCars = [
+            { name: 'MB Car', path: 'MB/scene.gltf' },
+            { name: 'GT3 Porsche', path: 'gt3/porsche_911992_gt3_rs_mr/scene.gltf' }
+        ];
 
         function init() {
             scene = new THREE.Scene();
@@ -485,18 +523,23 @@
             
             const carGroup = new THREE.Group();
             
-            // Load the GLTF model from MB folder
+            // Load the current selected car
+            const currentCar = availableCars[currentCarIndex];
             if (gltfLoader) {
+                console.log(`Loading car: ${currentCar.name}`);
                 gltfLoader.load(
-                    'MB/scene.gltf',
+                    currentCar.path,
                     (gltf) => {
                         const model = gltf.scene;
                         
                         // Scale the model to make it larger
                         model.scale.set(3, 3, 3);
                         
-                        // Try no rotation first (remove the 180 degree rotation)
-                        // model.rotation.y = 0; // This is the default, so we can omit it
+                        // Rotate GT3 car 180 degrees if it's the GT3 model
+                        if (currentCar.name === 'GT3 Porsche') {
+                            model.rotation.y = Math.PI; // 180 degrees
+                        }
+                        // MB car uses default rotation (0)
                         
                         // Center the model and lift it up so wheels touch ground
                         const box = new THREE.Box3().setFromObject(model);
@@ -531,7 +574,7 @@
                         
                         // Add model to car group
                         carGroup.add(model);
-                        console.log('Car model loaded successfully');
+                        console.log(`${currentCar.name} loaded successfully`);
                     },
                     (progress) => {
                         if (progress.total > 0) {
@@ -561,6 +604,7 @@
             
             // Initialize displays
             updateNitroDisplay();
+            updateCarDisplay();
         }
         
         function createBasicCar(carGroup) {
@@ -831,11 +875,48 @@
         function onKeyDown(e) {
             keys[e.key.toLowerCase()] = true;
             
+            // Car switching with T key
+            if (e.key.toLowerCase() === 't') {
+                switchCar();
+            }
+            
             // Nitro activation
             if (e.key === 'Shift' && !nitroActive && nitroTimeLeft === 0) {
                 nitroActive = true;
                 nitroTimeLeft = NITRO_DURATION;
             }
+        }
+        
+        function switchCar() {
+            // Store current car position and rotation
+            const currentPosition = playerCar ? playerCar.position.clone() : new THREE.Vector3(0, 0, 0);
+            const currentRotation = carRotation;
+            const currentVelocity = carVelocity.clone();
+            const currentSpeedValue = currentSpeed;
+            
+            // Switch to next car
+            currentCarIndex = (currentCarIndex + 1) % availableCars.length;
+            
+            // Create new car
+            createPlayerCar();
+            
+            // Wait a moment for the car to load, then restore position
+            setTimeout(() => {
+                if (playerCar) {
+                    playerCar.position.copy(currentPosition);
+                    carRotation = currentRotation;
+                    carVelocity.copy(currentVelocity);
+                    currentSpeed = currentSpeedValue;
+                    playerCar.rotation.y = carRotation;
+                    
+                    console.log(`Switched to: ${availableCars[currentCarIndex].name}`);
+                    updateCarDisplay();
+                }
+            }, 100);
+        }
+        
+        function updateCarDisplay() {
+            document.getElementById('carName').textContent = availableCars[currentCarIndex].name;
         }
         
         function activateNitro() {
