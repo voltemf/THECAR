@@ -5,7 +5,7 @@ on:
   push:
     branches: ["main"]
 
-  # Allows you to run this workflow manually from the Actions tab
+  # Allows this to be found and run manually from the Actions tab
   workflow_dispatch:
 
 # Grant permissions for the workflow to deploy to GitHub Pages
@@ -22,7 +22,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # Step 1: This is the fix!
-      # Checks out your repository's code AND downloads LFS files
       - name: Checkout with LFS
         uses: actions/checkout@v4
         with:
