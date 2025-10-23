@@ -429,8 +429,7 @@
         ];
 
         function createSkybox() {
-            // Create a large sphere for the skybox
-            const skyGeometry = new THREE.SphereGeometry(1000, 60, 40);
+            console.log('🌅 Creating sunset skybox...');
             
             // Create sunset skybox with clouds
             const canvas = document.createElement('canvas');
@@ -438,7 +437,15 @@
             canvas.height = 1024;
             const context = canvas.getContext('2d');
             
+            if (!context) {
+                console.error('❌ Failed to get 2D context for skybox canvas');
+                return;
+            }
+            
+            console.log('✅ Canvas created:', canvas.width, 'x', canvas.height);
+            
             // Create sunset gradient background
+            console.log('🎨 Creating gradient...');
             const gradient = context.createLinearGradient(0, 0, 0, canvas.height);
             gradient.addColorStop(0, '#1a1a2e');     // Deep purple at top
             gradient.addColorStop(0.2, '#16213e');   // Dark blue
@@ -449,9 +456,11 @@
             
             context.fillStyle = gradient;
             context.fillRect(0, 0, canvas.width, canvas.height);
+            console.log('✅ Gradient applied to canvas');
             
             // Add procedural clouds
             function drawClouds() {
+                console.log('☁️ Drawing clouds...');
                 context.globalCompositeOperation = 'overlay';
                 
                 // Generate multiple cloud layers
@@ -494,18 +503,29 @@
                 }
                 
                 context.globalCompositeOperation = 'source-over';
+                console.log('✅ Clouds drawn successfully');
             }
             
+            console.log('🎯 About to draw clouds...');
             drawClouds();
             
+            // Create texture and set as scene background
             const texture = new THREE.CanvasTexture(canvas);
-            const skyMaterial = new THREE.MeshBasicMaterial({
-                map: texture,
-                side: THREE.BackSide
-            });
+            texture.mapping = THREE.EquirectangularReflectionMapping;
+            texture.needsUpdate = true;
             
-            const skybox = new THREE.Mesh(skyGeometry, skyMaterial);
-            scene.add(skybox);
+            console.log('🖼️ Texture created, applying to scene...');
+            
+            // Set as scene background (this is more reliable than sphere method)
+            scene.background = texture;
+            console.log('🌅 Sunset skybox with clouds applied to scene background');
+            
+            // Verify the scene background was set
+            if (scene.background === texture) {
+                console.log('✅ Scene background successfully set to sunset texture');
+            } else {
+                console.error('❌ Failed to set scene background');
+            }
         }
 
         function init() {
