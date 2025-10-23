@@ -380,6 +380,7 @@
         <div class="mobile-buttons">
             <div class="mobile-button" id="nitroBtn">NITRO</div>
             <div class="mobile-button" id="brakeBtn">BRAKE</div>
+            <div class="mobile-button" id="switchCarBtn">SWITCH</div>
         </div>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -427,10 +428,92 @@
             { name: 'GT3 Porsche', path: 'gt3/porsche_911992_gt3_rs_mr/scene.gltf' }
         ];
 
+        function createSkybox() {
+            // Create a large sphere for the skybox
+            const skyGeometry = new THREE.SphereGeometry(1000, 60, 40);
+            
+            // Create sunset skybox with clouds
+            const canvas = document.createElement('canvas');
+            canvas.width = 2048;
+            canvas.height = 1024;
+            const context = canvas.getContext('2d');
+            
+            // Create sunset gradient background
+            const gradient = context.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#1a1a2e');     // Deep purple at top
+            gradient.addColorStop(0.2, '#16213e');   // Dark blue
+            gradient.addColorStop(0.4, '#0f3460');   // Navy blue
+            gradient.addColorStop(0.6, '#e94560');   // Pink/red
+            gradient.addColorStop(0.8, '#f39c12');   // Orange
+            gradient.addColorStop(1, '#f1c40f');     // Golden yellow at horizon
+            
+            context.fillStyle = gradient;
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Add procedural clouds
+            function drawClouds() {
+                context.globalCompositeOperation = 'overlay';
+                
+                // Generate multiple cloud layers
+                for (let layer = 0; layer < 3; layer++) {
+                    const numClouds = 15 + layer * 5;
+                    const opacity = 0.3 - layer * 0.1;
+                    const size = 80 + layer * 40;
+                    
+                    for (let i = 0; i < numClouds; i++) {
+                        const x = Math.random() * canvas.width;
+                        const y = canvas.height * 0.3 + Math.random() * canvas.height * 0.4;
+                        
+                        // Create cloud gradient
+                        const cloudGradient = context.createRadialGradient(x, y, 0, x, y, size);
+                        cloudGradient.addColorStop(0, `rgba(255, 255, 255, ${opacity})`);
+                        cloudGradient.addColorStop(0.5, `rgba(255, 200, 150, ${opacity * 0.8})`);
+                        cloudGradient.addColorStop(1, `rgba(255, 150, 100, 0)`);
+                        
+                        context.fillStyle = cloudGradient;
+                        context.beginPath();
+                        context.arc(x, y, size, 0, Math.PI * 2);
+                        context.fill();
+                        
+                        // Add smaller cloud puffs
+                        for (let j = 0; j < 3; j++) {
+                            const offsetX = x + (Math.random() - 0.5) * size;
+                            const offsetY = y + (Math.random() - 0.5) * size * 0.5;
+                            const puffSize = size * (0.3 + Math.random() * 0.4);
+                            
+                            const puffGradient = context.createRadialGradient(offsetX, offsetY, 0, offsetX, offsetY, puffSize);
+                            puffGradient.addColorStop(0, `rgba(255, 220, 180, ${opacity * 0.6})`);
+                            puffGradient.addColorStop(1, 'rgba(255, 180, 120, 0)');
+                            
+                            context.fillStyle = puffGradient;
+                            context.beginPath();
+                            context.arc(offsetX, offsetY, puffSize, 0, Math.PI * 2);
+                            context.fill();
+                        }
+                    }
+                }
+                
+                context.globalCompositeOperation = 'source-over';
+            }
+            
+            drawClouds();
+            
+            const texture = new THREE.CanvasTexture(canvas);
+            const skyMaterial = new THREE.MeshBasicMaterial({
+                map: texture,
+                side: THREE.BackSide
+            });
+            
+            const skybox = new THREE.Mesh(skyGeometry, skyMaterial);
+            scene.add(skybox);
+        }
+
         function init() {
             scene = new THREE.Scene();
-            scene.fog = new THREE.Fog(0x87CEEB, 100, 1000);
-            scene.background = new THREE.Color(0x87CEEB);
+            scene.fog = new THREE.Fog(0xff9966, 200, 1200); // Warm orange fog for sunset
+            
+            // Create skybox
+            createSkybox();
             
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
             camera.position.set(0, 6, 12);
@@ -445,12 +528,13 @@
             // Initialize GLB loader
             gltfLoader = new THREE.GLTFLoader();
             
-            // Simple working lighting setup
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            // Sunset lighting setup
+            const ambientLight = new THREE.AmbientLight(0xffa366, 0.4); // Warm orange ambient
             scene.add(ambientLight);
             
-            const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
-            dirLight.position.set(100, 150, 50);
+            // Main sunset directional light (low angle like setting sun)
+            const dirLight = new THREE.DirectionalLight(0xff6b35, 1.2); // Orange sunset light
+            dirLight.position.set(-100, 30, 100); // Low angle from horizon
             dirLight.castShadow = true;
             dirLight.shadow.camera.left = -200;
             dirLight.shadow.camera.right = 200;
@@ -460,6 +544,16 @@
             dirLight.shadow.mapSize.width = 2048;
             dirLight.shadow.mapSize.height = 2048;
             scene.add(dirLight);
+            
+            // Additional sunset atmosphere lighting
+            const rimLight = new THREE.DirectionalLight(0xffaa44, 0.8); // Golden rim light
+            rimLight.position.set(200, 80, -150); // From opposite side
+            scene.add(rimLight);
+            
+            // Soft purple light from the opposite direction for contrast
+            const fillLight = new THREE.DirectionalLight(0x9966ff, 0.3); // Purple fill light
+            fillLight.position.set(-50, 100, -100);
+            scene.add(fillLight);
             
             createTrack('parkrug');
             createPlayerCar();
@@ -957,6 +1051,7 @@
             const joystickHandle = document.getElementById('joystickHandle');
             const nitroBtn = document.getElementById('nitroBtn');
             const brakeBtn = document.getElementById('brakeBtn');
+            const switchCarBtn = document.getElementById('switchCarBtn');
             
             // Get joystick center position
             const joystickRect = joystick.getBoundingClientRect();
@@ -1005,6 +1100,12 @@
             brakeBtn.addEventListener('touchend', (e) => {
                 e.preventDefault();
                 mobileBrake = false;
+            });
+            
+            // Switch car button events
+            switchCarBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                switchCar();
             });
             
             // Update joystick center on window resize
