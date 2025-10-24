@@ -581,6 +581,40 @@
         </div>
     </div>
     
+    <!-- Loading Progress Indicator -->
+    <div id="loadingProgress" style="
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        background: rgba(0, 0, 0, 0.8);
+        color: #00ff00;
+        padding: 10px 15px;
+        border-radius: 5px;
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        z-index: 1000;
+        display: none;
+        border: 1px solid #00ff00;
+    ">
+        <div>🚀 Preloading Assets...</div>
+        <div id="loadingDetails" style="margin-top: 5px; font-size: 10px; color: #888;"></div>
+        <div id="loadingBar" style="
+            width: 200px;
+            height: 4px;
+            background: #333;
+            margin-top: 8px;
+            border-radius: 2px;
+            overflow: hidden;
+        ">
+            <div id="loadingFill" style="
+                height: 100%;
+                background: linear-gradient(90deg, #00ff00, #00aa00);
+                width: 0%;
+                transition: width 0.3s ease;
+            "></div>
+        </div>
+    </div>
+    
     <!-- Developer Menu -->
     <div id="developerMenu">
         <h2>🛠️ DEVELOPER MENU 🛠️</h2>
@@ -689,6 +723,13 @@
         let currentSpeed = 0;
         let trackObjects = [];
         let gltfLoader = null;
+        
+        // Performance optimization variables
+        let preloadedCars = new Map(); // Cache for preloaded car models
+        let preloadedMaps = new Map(); // Cache for preloaded maps
+        let loadingQueue = []; // Queue for sequential loading
+        let isPreloading = false;
+        let disposedModels = new Set(); // Track disposed models
         
         // Camera constraints
         const MAX_CAMERA_DISTANCE = 20;
@@ -855,13 +896,24 @@
             // Create skybox
             createSkybox();
             
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000); // Reduced far plane from 2000 to 1000
             camera.position.set(0, 20, 50); // Higher and further back to see everything
             
-            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer = new THREE.WebGLRenderer({ 
+                antialias: true,
+                powerPreference: "high-performance", // Request high-performance GPU
+                stencil: false, // Disable stencil buffer to save memory
+                depth: true,
+                logarithmicDepthBuffer: false // Can help with z-fighting but uses more memory
+            });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.shadowMap.enabled = true;
             renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            
+            // Optimize renderer settings for performance
+            renderer.outputEncoding = THREE.sRGBEncoding;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.0;
             
             document.body.appendChild(renderer.domElement);
             
@@ -889,10 +941,21 @@
                 console.log('⚠️ Canvas lost focus - click to regain focus');
             });
             
-            // Initialize GLB loader
+            // Initialize GLB loader with optimization
             gltfLoader = new THREE.GLTFLoader();
             
-            // Initialize texture loader
+            // Add Draco decoder for compression (if available)
+            try {
+                const dracoLoader = new THREE.DRACOLoader();
+                dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+                dracoLoader.preload();
+                gltfLoader.setDRACOLoader(dracoLoader);
+                console.log('✅ Draco compression decoder loaded');
+            } catch(e) {
+                console.log('⚠️ Draco decoder not available, using standard loading');
+            }
+            
+            // Initialize texture loader with optimization
             textureLoader = new THREE.TextureLoader();
             // Sunset lighting setup
             const ambientLight = new THREE.AmbientLight(0xffa366, 0.4); // Warm orange ambient
@@ -923,6 +986,11 @@
             
             createTrack('parkrug');
             createPlayerCar();
+            
+            // Start preloading assets in background
+            setTimeout(() => {
+                startPreloading();
+            }, 1000); // Wait 1 second after initial load
             
             // Add a debug marker at origin to help see scale
             const debugGeometry = new THREE.BoxGeometry(2, 2, 2);
@@ -998,13 +1066,37 @@
         // loadGLBModel('path/to/your/car.glb', { x: 10, y: 0, z: 10 }, 2);
 
         function createPlayerCar() {
-            if (playerCar) scene.remove(playerCar);
+            if (playerCar) {
+                // Dispose old car model to free memory
+                disposeModel(playerCar);
+                scene.remove(playerCar);
+            }
             
             const carGroup = new THREE.Group();
             
             // Load the current selected car
             const currentCar = availableCars[currentCarIndex];
-            if (gltfLoader) {
+            
+            // Check if car is already preloaded
+            if (preloadedCars.has(currentCar.path)) {
+                console.log(`🚀 Using preloaded car: ${currentCar.name}`);
+                const preloadedModel = preloadedCars.get(currentCar.path);
+                const model = preloadedModel.clone();
+                
+                // Apply positioning
+                const box = new THREE.Box3().setFromObject(model);
+                const center = box.getCenter(new THREE.Vector3());
+                
+                if (currentCar.name === 'Batmobile Tumbler') {
+                    model.position.set(-center.x, -box.min.y - 10.0, -center.z);
+                } else {
+                    model.position.set(-center.x, -box.min.y + 0.2, -center.z);
+                }
+                
+                carGroup.add(model);
+                finishCarCreation(carGroup, currentCar);
+                
+            } else if (gltfLoader) {
                 console.log(`Loading car: ${currentCar.name}`);
                 gltfLoader.load(
                     currentCar.path,
@@ -1046,7 +1138,7 @@
                             model.position.set(-center.x, -box.min.y + 0.2, -center.z);
                         }
                         
-                        // Configure the model
+                        // Configure the model with optimization
                         model.traverse((child) => {
                             if (child.isMesh) {
                                 child.castShadow = true;
@@ -1075,9 +1167,11 @@
                         console.log(`Car position: x=${carGroup.position.x}, y=${carGroup.position.y}, z=${carGroup.position.z}`);
                         console.log(`Car scale: x=${model.scale.x}, y=${model.scale.y}, z=${model.scale.z}`);
                         
-                        // Reset camera to look at the car
-                        camera.position.set(0, 20, 50);
-                        camera.lookAt(carGroup.position);
+                        // Store in preloaded cache for future use
+                        const optimizedModel = optimizeModel(model.clone(), currentCar);
+                        preloadedCars.set(currentCar.path, optimizedModel);
+                        
+                        finishCarCreation(carGroup, currentCar);
                     },
                     (progress) => {
                         if (progress.total > 0) {
@@ -1090,13 +1184,17 @@
                         console.log('Using fallback basic car');
                         // Fallback to basic car if model fails to load
                         createBasicCar(carGroup);
+                        finishCarCreation(carGroup, currentCar);
                     }
                 );
             } else {
                 // Fallback to basic car if loader not ready
                 createBasicCar(carGroup);
+                finishCarCreation(carGroup, currentCar);
             }
-            
+        }
+        
+        function finishCarCreation(carGroup, currentCar) {
             carGroup.position.set(0, 0, 0);
             scene.add(carGroup);
             playerCar = carGroup;
@@ -1111,6 +1209,9 @@
             // Initialize displays
             updateNitroDisplay();
             updateCarDisplay();
+            
+            // Clean up memory periodically
+            cleanupMemory();
         }
         
         function createBasicCar(carGroup) {
@@ -1158,7 +1259,11 @@
         }
 
         function createTrack(type, customMapData = null) {
-            trackObjects.forEach(obj => scene.remove(obj));
+            // Dispose old track objects to free memory
+            trackObjects.forEach(obj => {
+                disposeModel(obj);
+                scene.remove(obj);
+            });
             trackObjects = [];
             
             if (customMapData) {
@@ -1166,8 +1271,27 @@
                 loadCustomMap(customMapData);
                 isCustomMap = true;
             } else if (type === 'parkrug') {
-                // Load the PARKRUG map instead of creating procedural track
-                if (gltfLoader) {
+                // Check if map is preloaded
+                if (preloadedMaps.has('PARKRUG/traffic_rug/scene.gltf')) {
+                    console.log('🚀 Using preloaded PARKRUG map');
+                    const preloadedMap = preloadedMaps.get('PARKRUG/traffic_rug/scene.gltf');
+                    const mapModel = preloadedMap.clone();
+                    
+                    // Apply current scale and positioning
+                    mapModel.scale.set(mapScale, mapScale, mapScale);
+                    mapModel.rotation.set(0, 0, 0);
+                    mapModel.position.set(0, 0, 0);
+                    
+                    scene.add(mapModel);
+                    trackObjects.push(mapModel);
+                    currentMap = mapModel;
+                    isCustomMap = false;
+                    
+                    console.log(`PARKRUG map loaded from cache (scaled ${mapScale}x)`);
+                    
+                } else if (gltfLoader) {
+                    // Load from network with optimization
+                    console.log('📡 Loading PARKRUG map from network...');
                     gltfLoader.load(
                         'PARKRUG/traffic_rug/scene.gltf',
                         (gltf) => {
@@ -1180,20 +1304,22 @@
                             mapModel.rotation.set(0, 0, 0);
                             mapModel.position.set(0, 0, 0); // Center and ensure it's at ground level
                             
-                            // Force flatten all child meshes
+                            // Optimize map model
                             mapModel.traverse((child) => {
                                 if (child.isMesh) {
                                     child.rotation.set(0, 0, 0);
-                                    // Reset any local transformations that might cause tilting
                                     child.position.y = Math.max(child.position.y, 0);
-                                }
-                            });
-                            
-                            // Configure the map model
-                            mapModel.traverse((child) => {
-                                if (child.isMesh) {
                                     child.receiveShadow = true;
                                     child.castShadow = true;
+                                    
+                                    // Optimize materials for map
+                                    if (child.material) {
+                                        if (Array.isArray(child.material)) {
+                                            child.material.forEach(mat => optimizeMaterial(mat));
+                                        } else {
+                                            optimizeMaterial(child.material);
+                                        }
+                                    }
                                 }
                             });
                             
@@ -1202,6 +1328,9 @@
                             trackObjects.push(mapModel);
                             currentMap = mapModel;
                             isCustomMap = false;
+                            
+                            // Cache the map for future use
+                            preloadedMaps.set('PARKRUG/traffic_rug/scene.gltf', mapModel.clone());
                             
                             console.log(`PARKRUG map loaded successfully (scaled ${mapScale}x, flattened)`);
                             console.log(`Map position: x=${mapModel.position.x}, y=${mapModel.position.y}, z=${mapModel.position.z}`);
@@ -1306,6 +1435,197 @@
             if (currentMap && trackObjects.length > 0) {
                 console.log(`🔄 Updating map scale to ${mapScale}x`);
                 currentMap.scale.set(mapScale, mapScale, mapScale);
+            }
+        }
+
+        // Performance Optimization Functions
+        function startPreloading() {
+            if (isPreloading) return;
+            isPreloading = true;
+            console.log('🚀 Starting background asset preloading...');
+            
+            // Show loading progress
+            const loadingProgress = document.getElementById('loadingProgress');
+            const loadingDetails = document.getElementById('loadingDetails');
+            const loadingFill = document.getElementById('loadingFill');
+            
+            loadingProgress.style.display = 'block';
+            loadingDetails.textContent = 'Initializing...';
+            loadingFill.style.width = '0%';
+            
+            // Preload cars first (excluding current car)
+            const carsToPreload = availableCars.filter((car, index) => index !== currentCarIndex);
+            preloadCars(carsToPreload, 0);
+        }
+        
+        function preloadCars(cars, index) {
+            const loadingDetails = document.getElementById('loadingDetails');
+            const loadingFill = document.getElementById('loadingFill');
+            const loadingProgress = document.getElementById('loadingProgress');
+            
+            if (index >= cars.length) {
+                console.log('✅ All cars preloaded successfully');
+                
+                // Update progress
+                loadingDetails.textContent = 'All assets loaded! 🎉';
+                loadingFill.style.width = '100%';
+                
+                // Hide loading indicator after delay
+                setTimeout(() => {
+                    loadingProgress.style.display = 'none';
+                }, 2000);
+                
+                isPreloading = false;
+                return;
+            }
+            
+            const car = cars[index];
+            if (preloadedCars.has(car.path)) {
+                // Already loaded, skip to next
+                preloadCars(cars, index + 1);
+                return;
+            }
+            
+            // Update progress
+            const progress = (index / cars.length) * 100;
+            loadingDetails.textContent = `Loading ${car.name}... (${index + 1}/${cars.length})`;
+            loadingFill.style.width = progress + '%';
+            
+            console.log(`🔄 Preloading car: ${car.name}...`);
+            
+            gltfLoader.load(
+                car.path,
+                (gltf) => {
+                    // Clone and optimize the model
+                    const optimizedModel = optimizeModel(gltf.scene.clone(), car);
+                    preloadedCars.set(car.path, optimizedModel);
+                    console.log(`✅ Preloaded: ${car.name}`);
+                    
+                    // Load next car after small delay
+                    setTimeout(() => preloadCars(cars, index + 1), 200);
+                },
+                (progress) => {
+                    // Update download progress
+                    if (progress.total > 0) {
+                        const downloadPercent = (progress.loaded / progress.total * 100).toFixed(1);
+                        loadingDetails.textContent = `Downloading ${car.name}... ${downloadPercent}%`;
+                    }
+                },
+                (error) => {
+                    console.error(`❌ Failed to preload ${car.name}:`, error);
+                    loadingDetails.textContent = `Failed to load ${car.name}, continuing...`;
+                    // Continue with next car even if one fails
+                    setTimeout(() => preloadCars(cars, index + 1), 100);
+                }
+            );
+        }
+        
+        function optimizeModel(model, carConfig) {
+            // Apply car-specific optimizations immediately
+            if (carConfig.name === 'Batmobile Tumbler') {
+                model.scale.set(1.5, 1.5, 1.5);
+                model.rotation.y = Math.PI * 1.5;
+            } else {
+                model.scale.set(3, 3, 3);
+                if (carConfig.name === 'GT3 Porsche') {
+                    model.rotation.y = Math.PI;
+                } else if (carConfig.name === 'Batmobile 1989') {
+                    model.rotation.y = Math.PI / 2;
+                } else if (carConfig.name === 'Lamborghini Diablo' || carConfig.name === 'Dodge Hellcat') {
+                    model.rotation.y = Math.PI * 2;
+                }
+            }
+            
+            // Optimize materials and meshes
+            model.traverse((child) => {
+                if (child.isMesh) {
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                    
+                    // Optimize materials
+                    if (child.material) {
+                        if (Array.isArray(child.material)) {
+                            child.material.forEach(mat => optimizeMaterial(mat));
+                        } else {
+                            optimizeMaterial(child.material);
+                        }
+                    }
+                    
+                    // Optimize geometry
+                    if (child.geometry) {
+                        child.geometry.computeBoundingSphere();
+                        child.geometry.computeBoundingBox();
+                    }
+                }
+            });
+            
+            return model;
+        }
+        
+        function optimizeMaterial(material) {
+            // Reduce material complexity for better performance
+            material.emissive = new THREE.Color(0x111111);
+            material.emissiveIntensity = 0.2;
+            
+            // Enable material disposal
+            material.needsUpdate = true;
+            
+            // Reduce texture resolution if too high
+            if (material.map && material.map.image) {
+                const img = material.map.image;
+                if (img.width > 1024 || img.height > 1024) {
+                    console.log('🔧 Large texture detected, consider optimizing:', img.width + 'x' + img.height);
+                }
+            }
+        }
+        
+        function disposeModel(model) {
+            if (!model || disposedModels.has(model.uuid)) return;
+            
+            model.traverse((child) => {
+                if (child.isMesh) {
+                    // Dispose geometry
+                    if (child.geometry) {
+                        child.geometry.dispose();
+                    }
+                    
+                    // Dispose materials
+                    if (child.material) {
+                        if (Array.isArray(child.material)) {
+                            child.material.forEach(mat => disposeMaterial(mat));
+                        } else {
+                            disposeMaterial(child.material);
+                        }
+                    }
+                }
+            });
+            
+            disposedModels.add(model.uuid);
+            console.log('🗑️ Model disposed:', model.name || 'unnamed');
+        }
+        
+        function disposeMaterial(material) {
+            // Dispose textures
+            ['map', 'normalMap', 'emissiveMap', 'roughnessMap', 'metalnessMap', 'alphaMap'].forEach(prop => {
+                if (material[prop]) {
+                    material[prop].dispose();
+                }
+            });
+            
+            // Dispose material
+            material.dispose();
+        }
+        
+        function cleanupMemory() {
+            // Force garbage collection hint
+            if (window.gc) {
+                window.gc();
+            }
+            
+            // Clear disposed models set periodically
+            if (disposedModels.size > 10) {
+                disposedModels.clear();
+                console.log('🧹 Cleaned disposed models registry');
             }
         }
 
@@ -1860,6 +2180,11 @@
             requestAnimationFrame(animate);
             updateCarPhysics();
             renderer.render(scene, camera);
+            
+            // Periodic memory cleanup (every 5 seconds)
+            if (Date.now() % 5000 < 16) {
+                cleanupMemory();
+            }
         }
 
         function onWindowResize() {
