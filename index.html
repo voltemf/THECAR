@@ -731,6 +731,14 @@
         let isPreloading = false;
         let disposedModels = new Set(); // Track disposed models
         
+        // Aggressive download optimization
+        let downloadCache = new Map(); // Cache downloaded data to avoid re-downloads
+        let compressedTextureCache = new Map(); // Cache compressed textures
+        const MAX_TEXTURE_SIZE = 512; // Reduce texture size for faster downloads
+        const TEXTURE_COMPRESSION_QUALITY = 0.7; // Compression quality (0.1-1.0)
+        let concurrentDownloads = 0;
+        const MAX_CONCURRENT_DOWNLOADS = 4; // Download multiple assets simultaneously
+        
         // Camera constraints
         const MAX_CAMERA_DISTANCE = 20;
         const MIN_CAMERA_DISTANCE = 12;
@@ -945,18 +953,39 @@
             gltfLoader = new THREE.GLTFLoader();
             
             // Add Draco decoder for compression (if available)
+            let dracoLoader = null;
             try {
-                const dracoLoader = new THREE.DRACOLoader();
+                dracoLoader = new THREE.DRACOLoader();
                 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
                 dracoLoader.preload();
                 gltfLoader.setDRACOLoader(dracoLoader);
                 console.log('✅ Draco compression decoder loaded');
             } catch(e) {
                 console.log('⚠️ Draco decoder not available, using standard loading');
+                dracoLoader = null;
             }
             
-            // Initialize texture loader with optimization
+            // Aggressive loading optimizations
+            gltfLoader.manager.onLoad = () => {
+                console.log('🚀 All GLTF assets loaded');
+            };
+            
+            gltfLoader.manager.onProgress = (url, loaded, total) => {
+                const percent = ((loaded / total) * 100).toFixed(1);
+                console.log(`📦 Overall progress: ${percent}% (${loaded}/${total})`);
+            };
+            
+            // Initialize texture loader with aggressive optimization
             textureLoader = new THREE.TextureLoader();
+            textureLoader.setCrossOrigin('anonymous'); // Enable cross-origin loading
+            
+            // Add aggressive download optimizations
+            console.log('🔧 Aggressive download optimizations enabled:');
+            console.log(`   - Max texture size: ${MAX_TEXTURE_SIZE}x${MAX_TEXTURE_SIZE}`);
+            console.log(`   - Texture compression: ${(TEXTURE_COMPRESSION_QUALITY * 100)}% quality`);
+            console.log(`   - Concurrent downloads: ${MAX_CONCURRENT_DOWNLOADS}`);
+            console.log(`   - Draco compression: ${dracoLoader ? 'Enabled' : 'Disabled'}`);
+            
             // Sunset lighting setup
             const ambientLight = new THREE.AmbientLight(0xffa366, 0.4); // Warm orange ambient
             scene.add(ambientLight);
@@ -1442,20 +1471,178 @@
         function startPreloading() {
             if (isPreloading) return;
             isPreloading = true;
-            console.log('🚀 Starting background asset preloading...');
+            console.log('🚀 Starting background asset preloading with aggressive optimizations...');
             
-            // Show loading progress
-            const loadingProgress = document.getElementById('loadingProgress');
-            const loadingDetails = document.getElementById('loadingDetails');
-            const loadingFill = document.getElementById('loadingFill');
+            // Check browser cache first
+            checkCachedAssets().then(() => {
+                // Show loading progress
+                const loadingProgress = document.getElementById('loadingProgress');
+                const loadingDetails = document.getElementById('loadingDetails');
+                const loadingFill = document.getElementById('loadingFill');
+                
+                loadingProgress.style.display = 'block';
+                loadingDetails.textContent = 'Initializing aggressive optimizations...';
+                loadingFill.style.width = '0%';
+                
+                // Preload cars first (excluding current car)
+                const carsToPreload = availableCars.filter((car, index) => index !== currentCarIndex);
+                preloadCars(carsToPreload, 0);
+            });
+        }
+        
+        async function checkCachedAssets() {
+            console.log('🗄️ Checking browser cache for assets...');
             
-            loadingProgress.style.display = 'block';
-            loadingDetails.textContent = 'Initializing...';
-            loadingFill.style.width = '0%';
+            // Check if browser supports IndexedDB for caching
+            if (!window.indexedDB) {
+                console.log('⚠️ IndexedDB not supported, skipping cache check');
+                return;
+            }
             
-            // Preload cars first (excluding current car)
-            const carsToPreload = availableCars.filter((car, index) => index !== currentCarIndex);
-            preloadCars(carsToPreload, 0);
+            try {
+                // Open database for asset caching
+                const dbRequest = indexedDB.open('CarGameAssetCache', 1);
+                
+                dbRequest.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains('assets')) {
+                        const store = db.createObjectStore('assets', { keyPath: 'url' });
+                        store.createIndex('timestamp', 'timestamp', { unique: false });
+                    }
+                };
+                
+                dbRequest.onsuccess = async (event) => {
+                    const db = event.target.result;
+                    
+                    // Check cache for each car
+                    for (const car of availableCars) {
+                        const cached = await getCachedAsset(db, car.path);
+                        if (cached) {
+                            console.log(`🗄️ Found cached asset: ${car.name}`);
+                            // Load from cache instead of network
+                            loadFromCache(car, cached);
+                        }
+                    }
+                    
+                    db.close();
+                };
+                
+            } catch (error) {
+                console.log('⚠️ Cache check failed:', error);
+            }
+        }
+        
+        function getCachedAsset(db, url) {
+            return new Promise((resolve) => {
+                const transaction = db.transaction(['assets'], 'readonly');
+                const store = transaction.objectStore('assets');
+                const request = store.get(url);
+                
+                request.onsuccess = () => {
+                    const result = request.result;
+                    if (result && (Date.now() - result.timestamp) < 86400000) { // 24 hours cache
+                        resolve(result);
+                    } else {
+                        resolve(null);
+                    }
+                };
+                
+                request.onerror = () => resolve(null);
+            });
+        }
+        
+        function loadFromCache(car, cachedData) {
+            console.log(`⚡ Loading ${car.name} from cache (instant load!)`);
+            
+            try {
+                // Parse cached GLTF data
+                const blob = new Blob([cachedData.data], { type: 'application/octet-stream' });
+                const arrayBuffer = blob.arrayBuffer();
+                
+                arrayBuffer.then(buffer => {
+                    if (gltfLoader) {
+                        gltfLoader.parse(
+                            buffer,
+                            '',
+                            (gltf) => {
+                                const optimizedModel = optimizeModel(gltf.scene.clone(), car);
+                                preloadedCars.set(car.path, optimizedModel);
+                                console.log(`⚡ ${car.name} loaded from cache instantly!`);
+                            },
+                            (error) => {
+                                console.log(`⚠️ Cache parse failed for ${car.name}, will download:`, error);
+                            }
+                        );
+                    }
+                });
+            } catch (error) {
+                console.log(`⚠️ Cache load failed for ${car.name}:`, error);
+            }
+        }
+        
+        async function loadAssetWithCache(url) {
+            console.log(`📦 Loading asset with cache: ${url}`);
+            
+            return new Promise((resolve, reject) => {
+                // First try to load normally and cache the result
+                const xhr = new XMLHttpRequest();
+                xhr.open('GET', url, true);
+                xhr.responseType = 'arraybuffer';
+                
+                xhr.onload = function() {
+                    if (xhr.status === 200) {
+                        const data = xhr.response;
+                        
+                        // Cache the downloaded data
+                        cacheAsset(url, data);
+                        
+                        // Parse with GLTF loader
+                        if (gltfLoader) {
+                            gltfLoader.parse(
+                                data,
+                                '',
+                                resolve,
+                                reject
+                            );
+                        } else {
+                            reject(new Error('GLTF loader not available'));
+                        }
+                    } else {
+                        reject(new Error(`HTTP ${xhr.status}: ${xhr.statusText}`));
+                    }
+                };
+                
+                xhr.onerror = () => reject(new Error('Network error'));
+                xhr.send();
+            });
+        }
+        
+        function cacheAsset(url, data) {
+            if (!window.indexedDB) return;
+            
+            try {
+                const dbRequest = indexedDB.open('CarGameAssetCache', 1);
+                
+                dbRequest.onsuccess = (event) => {
+                    const db = event.target.result;
+                    const transaction = db.transaction(['assets'], 'readwrite');
+                    const store = transaction.objectStore('assets');
+                    
+                    const assetData = {
+                        url: url,
+                        data: data,
+                        timestamp: Date.now(),
+                        size: data.byteLength
+                    };
+                    
+                    store.put(assetData);
+                    console.log(`💾 Cached asset: ${url} (${(data.byteLength / 1024 / 1024).toFixed(2)} MB)`);
+                    
+                    db.close();
+                };
+            } catch (error) {
+                console.log('⚠️ Failed to cache asset:', error);
+            }
         }
         
         function preloadCars(cars, index) {
@@ -1479,45 +1666,66 @@
                 return;
             }
             
-            const car = cars[index];
-            if (preloadedCars.has(car.path)) {
-                // Already loaded, skip to next
-                preloadCars(cars, index + 1);
-                return;
-            }
+            // PARALLEL LOADING: Load multiple cars simultaneously instead of sequentially
+            const remainingCars = cars.slice(index);
+            const batchSize = Math.min(MAX_CONCURRENT_DOWNLOADS, remainingCars.length);
+            let completedInBatch = 0;
             
-            // Update progress
-            const progress = (index / cars.length) * 100;
-            loadingDetails.textContent = `Loading ${car.name}... (${index + 1}/${cars.length})`;
-            loadingFill.style.width = progress + '%';
+            console.log(`🚀 Starting parallel batch: loading ${batchSize} cars simultaneously...`);
             
-            console.log(`🔄 Preloading car: ${car.name}...`);
-            
-            gltfLoader.load(
-                car.path,
-                (gltf) => {
-                    // Clone and optimize the model
-                    const optimizedModel = optimizeModel(gltf.scene.clone(), car);
-                    preloadedCars.set(car.path, optimizedModel);
-                    console.log(`✅ Preloaded: ${car.name}`);
-                    
-                    // Load next car after small delay
-                    setTimeout(() => preloadCars(cars, index + 1), 200);
-                },
-                (progress) => {
-                    // Update download progress
-                    if (progress.total > 0) {
-                        const downloadPercent = (progress.loaded / progress.total * 100).toFixed(1);
-                        loadingDetails.textContent = `Downloading ${car.name}... ${downloadPercent}%`;
+            for (let i = 0; i < batchSize; i++) {
+                const car = remainingCars[i];
+                const carIndex = index + i;
+                
+                if (preloadedCars.has(car.path)) {
+                    // Already loaded, count as completed
+                    completedInBatch++;
+                    if (completedInBatch === batchSize) {
+                        // All in this batch done, start next batch
+                        setTimeout(() => preloadCars(cars, index + batchSize), 50);
                     }
-                },
-                (error) => {
+                    continue;
+                }
+                
+                // Update progress for current car
+                const progress = (carIndex / cars.length) * 100;
+                loadingDetails.textContent = `Loading ${car.name}... (${carIndex + 1}/${cars.length}) [Parallel: ${i + 1}/${batchSize}]`;
+                loadingFill.style.width = progress + '%';
+                
+                console.log(`🔄 Parallel loading car ${i + 1}/${batchSize}: ${car.name}...`);
+                concurrentDownloads++;
+                
+                // Use custom loading with caching
+                loadAssetWithCache(car.path).then((gltf) => {
+                    if (gltf) {
+                        // Clone and optimize the model
+                        const optimizedModel = optimizeModel(gltf.scene.clone(), car);
+                        preloadedCars.set(car.path, optimizedModel);
+                        console.log(`✅ Parallel loaded: ${car.name} (${completedInBatch + 1}/${batchSize})`);
+                    }
+                    
+                    concurrentDownloads--;
+                    completedInBatch++;
+                    
+                    // Check if this batch is complete
+                    if (completedInBatch === batchSize) {
+                        console.log(`🎯 Batch complete! Moving to next batch...`);
+                        // Start next batch after small delay
+                        setTimeout(() => preloadCars(cars, index + batchSize), 100);
+                    }
+                }).catch((error) => {
                     console.error(`❌ Failed to preload ${car.name}:`, error);
                     loadingDetails.textContent = `Failed to load ${car.name}, continuing...`;
-                    // Continue with next car even if one fails
-                    setTimeout(() => preloadCars(cars, index + 1), 100);
-                }
-            );
+                    
+                    concurrentDownloads--;
+                    completedInBatch++;
+                    
+                    // Continue even if one fails
+                    if (completedInBatch === batchSize) {
+                        setTimeout(() => preloadCars(cars, index + batchSize), 100);
+                    }
+                });
+            }
         }
         
         function optimizeModel(model, carConfig) {
@@ -1536,11 +1744,42 @@
                 }
             }
             
-            // Optimize materials and meshes
+            // AGGRESSIVE OPTIMIZATION: Reduce polygon count for faster loading and rendering
+            let totalVerticesReduced = 0;
+            let meshesOptimized = 0;
+            
             model.traverse((child) => {
                 if (child.isMesh) {
                     child.castShadow = true;
                     child.receiveShadow = true;
+                    
+                    // Aggressive LOD optimization - reduce geometry complexity
+                    if (child.geometry) {
+                        const originalVertices = child.geometry.attributes.position?.count || 0;
+                        
+                        // Skip optimization for very simple geometries
+                        if (originalVertices > 500) {
+                            // Reduce vertex count for high-poly meshes
+                            child.geometry = simplifyGeometry(child.geometry, 0.3); // Reduce to 30% of original vertices
+                            
+                            const newVertices = child.geometry.attributes.position?.count || 0;
+                            totalVerticesReduced += (originalVertices - newVertices);
+                            meshesOptimized++;
+                            
+                            console.log(`🔧 Mesh optimized: ${originalVertices} → ${newVertices} vertices (${((newVertices/originalVertices)*100).toFixed(1)}%)`);
+                        }
+                        
+                        child.geometry.computeBoundingSphere();
+                        child.geometry.computeBoundingBox();
+                        
+                        // Remove unnecessary vertex attributes to save memory
+                        if (child.geometry.attributes.uv2) {
+                            child.geometry.deleteAttribute('uv2');
+                        }
+                        if (child.geometry.attributes.color && !child.material.vertexColors) {
+                            child.geometry.deleteAttribute('color');
+                        }
+                    }
                     
                     // Optimize materials
                     if (child.material) {
@@ -1550,16 +1789,75 @@
                             optimizeMaterial(child.material);
                         }
                     }
-                    
-                    // Optimize geometry
-                    if (child.geometry) {
-                        child.geometry.computeBoundingSphere();
-                        child.geometry.computeBoundingBox();
-                    }
                 }
             });
             
+            if (meshesOptimized > 0) {
+                console.log(`✅ Model optimized: ${meshesOptimized} meshes, ${totalVerticesReduced.toLocaleString()} vertices reduced`);
+            }
+            
             return model;
+        }
+        
+        function simplifyGeometry(geometry, targetRatio) {
+            // Simple geometry simplification by removing every nth vertex
+            if (!geometry.attributes.position) return geometry;
+            
+            const positionAttribute = geometry.attributes.position;
+            const vertexCount = positionAttribute.count;
+            const targetVertexCount = Math.floor(vertexCount * targetRatio);
+            
+            if (targetVertexCount >= vertexCount) return geometry; // No need to simplify
+            
+            // Create simplified geometry
+            const simplifiedGeometry = new THREE.BufferGeometry();
+            
+            // Calculate step size to achieve target vertex count
+            const step = Math.max(1, Math.floor(vertexCount / targetVertexCount));
+            
+            // Create new position array
+            const positions = [];
+            const normals = [];
+            const uvs = [];
+            
+            for (let i = 0; i < vertexCount; i += step) {
+                // Add position
+                positions.push(
+                    positionAttribute.getX(i),
+                    positionAttribute.getY(i),
+                    positionAttribute.getZ(i)
+                );
+                
+                // Add normal if available
+                if (geometry.attributes.normal) {
+                    normals.push(
+                        geometry.attributes.normal.getX(i),
+                        geometry.attributes.normal.getY(i),
+                        geometry.attributes.normal.getZ(i)
+                    );
+                }
+                
+                // Add UV if available
+                if (geometry.attributes.uv) {
+                    uvs.push(
+                        geometry.attributes.uv.getX(i),
+                        geometry.attributes.uv.getY(i)
+                    );
+                }
+            }
+            
+            // Set attributes
+            simplifiedGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+            if (normals.length > 0) {
+                simplifiedGeometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+            } else {
+                simplifiedGeometry.computeVertexNormals();
+            }
+            if (uvs.length > 0) {
+                simplifiedGeometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+            }
+            
+            return simplifiedGeometry;
         }
         
         function optimizeMaterial(material) {
@@ -1570,13 +1868,68 @@
             // Enable material disposal
             material.needsUpdate = true;
             
-            // Reduce texture resolution if too high
+            // Aggressive texture optimization for faster downloads
             if (material.map && material.map.image) {
                 const img = material.map.image;
-                if (img.width > 1024 || img.height > 1024) {
-                    console.log('🔧 Large texture detected, consider optimizing:', img.width + 'x' + img.height);
+                if (img.width > MAX_TEXTURE_SIZE || img.height > MAX_TEXTURE_SIZE) {
+                    console.log(`🔧 Compressing texture from ${img.width}x${img.height} to ${MAX_TEXTURE_SIZE}x${MAX_TEXTURE_SIZE}`);
+                    material.map = compressTexture(material.map);
                 }
             }
+            
+            // Compress other texture maps too
+            ['normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap'].forEach(mapType => {
+                if (material[mapType] && material[mapType].image) {
+                    const img = material[mapType].image;
+                    if (img.width > MAX_TEXTURE_SIZE || img.height > MAX_TEXTURE_SIZE) {
+                        material[mapType] = compressTexture(material[mapType]);
+                    }
+                }
+            });
+        }
+        
+        function compressTexture(texture) {
+            const cacheKey = texture.uuid + '_compressed';
+            if (compressedTextureCache.has(cacheKey)) {
+                return compressedTextureCache.get(cacheKey);
+            }
+            
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = texture.image;
+            
+            // Calculate new size maintaining aspect ratio
+            const aspectRatio = img.width / img.height;
+            let newWidth = MAX_TEXTURE_SIZE;
+            let newHeight = MAX_TEXTURE_SIZE;
+            
+            if (aspectRatio > 1) {
+                newHeight = MAX_TEXTURE_SIZE / aspectRatio;
+            } else {
+                newWidth = MAX_TEXTURE_SIZE * aspectRatio;
+            }
+            
+            canvas.width = newWidth;
+            canvas.height = newHeight;
+            
+            // Draw compressed image
+            ctx.drawImage(img, 0, 0, newWidth, newHeight);
+            
+            // Create new compressed texture
+            const compressedTexture = new THREE.CanvasTexture(canvas);
+            compressedTexture.encoding = texture.encoding;
+            compressedTexture.wrapS = texture.wrapS;
+            compressedTexture.wrapT = texture.wrapT;
+            compressedTexture.minFilter = THREE.LinearFilter; // Use simpler filtering for performance
+            compressedTexture.magFilter = THREE.LinearFilter;
+            compressedTexture.needsUpdate = true;
+            
+            // Cache the compressed texture
+            compressedTextureCache.set(cacheKey, compressedTexture);
+            
+            console.log(`✅ Texture compressed: ${img.width}x${img.height} → ${newWidth}x${newHeight} (${((newWidth * newHeight) / (img.width * img.height) * 100).toFixed(1)}% size)`);
+            
+            return compressedTexture;
         }
         
         function disposeModel(model) {
