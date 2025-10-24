@@ -1,0 +1,11 @@
+Model Information:
+* title:	Batmobile 1989
+* source:	https://sketchfab.com/3d-models/batmobile-1989-1b951b22db35419a890ee3a2923a2185
+* author:	Fr3akShow (https://sketchfab.com/Fr3akShow)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Batmobile 1989" (https://sketchfab.com/3d-models/batmobile-1989-1b951b22db35419a890ee3a2923a2185) by Fr3akShow (https://sketchfab.com/Fr3akShow) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

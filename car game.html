@@ -211,18 +211,19 @@
             color: #ccc;
         }
         #nitroDisplay {
-            position: absolute;
+            position: fixed;
             top: 20px;
-            right: 20px;
+            left: 50%;
+            transform: translateX(-50%);
             background: rgba(0, 0, 0, 0.8);
             border: 2px solid #00ff00;
             border-radius: 10px;
-            padding: 15px;
+            padding: 10px 20px;
             font-family: 'Arial', sans-serif;
             color: #fff;
             text-align: center;
             z-index: 100;
-            min-width: 120px;
+            min-width: 200px;
         }
         #nitroDisplay .nitro-bar {
             width: 100px;
@@ -269,6 +270,38 @@
             font-size: 12px;
             color: #ccc;
             margin-top: 5px;
+        }
+        
+        #carGuide {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(20, 20, 30, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #ff6600;
+            font-size: 12px;
+            color: #fff;
+            max-width: 200px;
+        }
+        #carGuide h4 {
+            color: #ff6600;
+            margin: 0 0 10px 0;
+            text-align: center;
+        }
+        #carGuide .car-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        #carGuide .car-list li {
+            margin: 3px 0;
+            padding: 2px 0;
+        }
+        #carGuide .car-key {
+            color: #ff6600;
+            font-weight: bold;
+            margin-right: 8px;
         }
         
         /* Mobile Controls */
@@ -337,6 +370,157 @@
             transform: scale(0.95);
         }
         
+        /* Developer Menu */
+        #developerMenu {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(10, 10, 20, 0.98);
+            border: 3px solid #00ff00;
+            border-radius: 15px;
+            padding: 20px;
+            color: #fff;
+            font-family: 'Arial', sans-serif;
+            min-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            z-index: 9999;
+            display: none;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+        }
+        
+        #developerMenu h2 {
+            color: #00ff00;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        
+        .dev-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(20, 20, 30, 0.8);
+            border-radius: 10px;
+            border: 1px solid #333;
+        }
+        
+        .dev-section h3 {
+            color: #00ff00;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        
+        .car-settings {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .setting-group {
+            margin-bottom: 10px;
+        }
+        
+        .setting-group label {
+            display: block;
+            color: #ccc;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        
+        .setting-group input[type="range"] {
+            width: 100%;
+            margin-bottom: 5px;
+        }
+        
+        .setting-group input[type="number"] {
+            width: 80px;
+            padding: 5px;
+            border: 1px solid #555;
+            background: #222;
+            color: #fff;
+            border-radius: 5px;
+        }
+        
+        .setting-group input[type="file"] {
+            width: 100%;
+            padding: 8px;
+            border: 2px dashed #555;
+            background: #222;
+            color: #fff;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .setting-group input[type="file"]:hover {
+            border-color: #00ff00;
+            background: #333;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #555;
+            transition: 0.4s;
+            border-radius: 34px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: #00ff00;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        .dev-button {
+            background: linear-gradient(135deg, #00ff00, #00cc00);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .dev-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px #00ff00;
+        }
+        
         @media (max-width: 768px) {
             #mobileControls {
                 display: block;
@@ -360,16 +544,29 @@
     </div>
     
     <div id="nitroDisplay">
-        <div>NITRO</div>
         <div class="nitro-bar">
             <div class="nitro-fill" id="nitroFill" style="width: 100%;"></div>
         </div>
-        <div id="nitroTime">READY</div>
     </div>
     
     <div id="carDisplay">
         <div class="car-name" id="carName">MB Car</div>
-        <div class="car-instruction">Press T to switch</div>
+        <div class="car-instruction">Press T to cycle | 1-6 for specific car</div>
+        <div style="color: #00ff00; font-size: 12px; margin-top: 5px;">
+            🚀 Press SHIFT for NITRO | Click screen to focus
+        </div>
+    </div>
+    
+    <div id="carGuide">
+        <h4>Car Selection</h4>
+        <ul class="car-list">
+            <li><span class="car-key">1</span>MB Car</li>
+            <li><span class="car-key">2</span>GT3 Porsche</li>
+            <li><span class="car-key">3</span>Batmobile Tumbler</li>
+            <li><span class="car-key">4</span>Batmobile 1989</li>
+            <li><span class="car-key">5</span>Lamborghini Diablo</li>
+            <li><span class="car-key">6</span>Dodge Hellcat</li>
+        </ul>
     </div>
     
     <!-- Mobile Controls -->
@@ -381,6 +578,105 @@
             <div class="mobile-button" id="nitroBtn">NITRO</div>
             <div class="mobile-button" id="brakeBtn">BRAKE</div>
             <div class="mobile-button" id="switchCarBtn">SWITCH</div>
+        </div>
+    </div>
+    
+    <!-- Developer Menu -->
+    <div id="developerMenu">
+        <h2>🛠️ DEVELOPER MENU 🛠️</h2>
+        <div class="dev-section">
+            <h3>🚗 Vehicle Settings</h3>
+            <div class="car-settings" id="carSettings">
+                <!-- Vehicle controls will be populated here -->
+            </div>
+        </div>
+        
+        <div class="dev-section">
+            <h3>📹 Camera Controls</h3>
+            <div class="setting-group">
+                <label>Camera Mode:</label>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="cameraToggle">
+                    <span class="slider"></span>
+                </label>
+                <span id="cameraMode">Follow Car</span>
+                <small style="display: block; color: #888; margin-top: 5px;">
+                    Free Camera: WASD to fly, Q/E up/down, Mouse to look around
+                </small>
+            </div>
+            <div class="setting-group">
+                <label>Camera Distance:</label>
+                <input type="range" id="cameraDistance" min="100" max="1000" value="300">
+                <input type="number" id="cameraDistanceValue" value="300">
+            </div>
+            <div class="setting-group">
+                <label>Camera Height:</label>
+                <input type="range" id="cameraHeight" min="50" max="500" value="150">
+                <input type="number" id="cameraHeightValue" value="150">
+            </div>
+        </div>
+        
+        <div class="dev-section">
+            <h3>🌍 World Settings</h3>
+            <div class="setting-group">
+                <label>Jump Power:</label>
+                <input type="range" id="jumpPower" min="5" max="30" value="10">
+                <input type="number" id="jumpPowerValue" value="10">
+            </div>
+            <div class="setting-group">
+                <label>Gravity:</label>
+                <input type="range" id="gravity" min="0.1" max="2" step="0.1" value="0.8">
+                <input type="number" id="gravityValue" value="0.8" step="0.1">
+            </div>
+        </div>
+        
+        <div class="dev-section">
+            <h3>🗺️ Map Management</h3>
+            <div class="setting-group">
+                <label>Import Custom Map (.gltf/.glb):</label>
+                <input type="file" id="mapUpload" accept=".gltf,.glb" style="margin-bottom: 10px;">
+                <small style="display: block; color: #888; margin-bottom: 10px;">
+                    Upload your own 3D map in GLTF or GLB format
+                </small>
+                <button class="dev-button" onclick="loadDefaultMap()">🏠 Load Default Map</button>
+                <button class="dev-button" onclick="clearMap()">🗑️ Clear Map</button>
+            </div>
+            <div class="setting-group">
+                <label>Map Scale:</label>
+                <input type="range" id="mapScale" min="1" max="1000" value="500">
+                <input type="number" id="mapScaleValue" value="500">
+                <small style="display: block; color: #888;">
+                    Adjust the size of imported maps
+                </small>
+            </div>
+        </div>
+        
+        <div class="dev-section">
+            <h3>🎨 Texture Management</h3>
+            <div class="setting-group">
+                <label>Upload Car Texture (.jpg/.png):</label>
+                <input type="file" id="carTextureUpload" accept=".jpg,.jpeg,.png" style="margin-bottom: 10px;">
+                <small style="display: block; color: #888; margin-bottom: 10px;">
+                    Upload custom textures for vehicles
+                </small>
+                <button class="dev-button" onclick="applyCachedTexture()">🎨 Apply Texture to Current Car</button>
+                <button class="dev-button" onclick="resetCarTexture()">🔄 Reset Car Texture</button>
+            </div>
+            <div class="setting-group">
+                <label>Upload Environment Texture (.jpg/.png):</label>
+                <input type="file" id="envTextureUpload" accept=".jpg,.jpeg,.png" style="margin-bottom: 10px;">
+                <small style="display: block; color: #888; margin-bottom: 10px;">
+                    Upload textures for map/environment elements
+                </small>
+                <button class="dev-button" onclick="applyCachedEnvTexture()">🌍 Apply Environment Texture</button>
+                <button class="dev-button" onclick="resetEnvTexture()">🔄 Reset Environment Texture</button>
+            </div>
+        </div>
+        
+        <div class="dev-section">
+            <button class="dev-button" onclick="resetToDefaults()">🔄 Reset All Settings</button>
+            <button class="dev-button" onclick="saveSettings()">💾 Save Settings</button>
+            <button class="dev-button" onclick="loadSettings()">📁 Load Settings</button>
         </div>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -411,8 +707,11 @@
         // Nitro system
         let nitroActive = false;
         let nitroTimeLeft = 0;
+        let nitroFading = false; // New variable for smooth transition
+        let nitroFadeProgress = 0; // Progress of nitro fade (0 = full nitro, 1 = no nitro)
         const NITRO_DURATION = 10; // 10 seconds
-        const NITRO_MULTIPLIER = 2.5;
+        const NITRO_MULTIPLIER = 1.8; // Reduced from 2.5 to 1.8 for smoother acceleration
+        const NITRO_FADE_DURATION = 3.0; // 3 seconds to fade out nitro effects
         
         // Mobile controls
         let joystickActive = false;
@@ -424,13 +723,34 @@
         // Car switching system
         let currentCarIndex = 0;
         const availableCars = [
-            { name: 'MB Car', path: 'MB/scene.gltf' },
-            { name: 'GT3 Porsche', path: 'gt3/porsche_911992_gt3_rs_mr/scene.gltf' }
+            { name: 'MB Car', path: 'MB/scene.gltf', topSpeed: 1.0, acceleration: 0.045 }, // ~300 km/h
+            { name: 'GT3 Porsche', path: 'gt3/porsche_911992_gt3_rs_mr/scene.gltf', topSpeed: 1.2, acceleration: 0.055 }, // ~360 km/h
+            { name: 'Batmobile Tumbler', path: 'bat1/batmobiletumbler/scene.gltf', topSpeed: 1.4, acceleration: 0.065 }, // ~420 km/h
+            { name: 'Batmobile 1989', path: 'bat2/batmobile_1989/scene.gltf', topSpeed: 1.1, acceleration: 0.050 }, // ~330 km/h
+            { name: 'Lamborghini Diablo', path: 'diablo/1995_lamborghini_diablo_sv/scene.gltf', topSpeed: 1.3, acceleration: 0.060 }, // ~390 km/h
+            { name: 'Dodge Hellcat', path: 'hcat/dodge_charger_srt_hellcat__high_quality/scene.gltf', topSpeed: 1.15, acceleration: 0.065 } // ~345 km/h
         ];
 
+        // Jump system for Batmobile Tumbler
+        let isJumping = false;
+        let jumpVelocity = 0;
+        let groundLevel = 0;
+        const JUMP_POWER = 10;
+        const GRAVITY = 0.8;
+
+        // Map management
+        let currentMap = null;
+        let mapScale = 500;
+        let isCustomMap = false;
+
+        // Texture management
+        let cachedCarTexture = null;
+        let cachedEnvTexture = null;
+        let originalCarMaterials = new Map(); // Store original materials for reset
+        let textureLoader = new THREE.TextureLoader();
+
         function createSkybox() {
-            // Create a large sphere for the skybox
-            const skyGeometry = new THREE.SphereGeometry(1000, 60, 40);
+            console.log('🌅 Creating sunset skybox...');
             
             // Create sunset skybox with clouds
             const canvas = document.createElement('canvas');
@@ -438,7 +758,15 @@
             canvas.height = 1024;
             const context = canvas.getContext('2d');
             
+            if (!context) {
+                console.error('❌ Failed to get 2D context for skybox canvas');
+                return;
+            }
+            
+            console.log('✅ Canvas created:', canvas.width, 'x', canvas.height);
+            
             // Create sunset gradient background
+            console.log('🎨 Creating gradient...');
             const gradient = context.createLinearGradient(0, 0, 0, canvas.height);
             gradient.addColorStop(0, '#1a1a2e');     // Deep purple at top
             gradient.addColorStop(0.2, '#16213e');   // Dark blue
@@ -449,9 +777,11 @@
             
             context.fillStyle = gradient;
             context.fillRect(0, 0, canvas.width, canvas.height);
+            console.log('✅ Gradient applied to canvas');
             
             // Add procedural clouds
             function drawClouds() {
+                console.log('☁️ Drawing clouds...');
                 context.globalCompositeOperation = 'overlay';
                 
                 // Generate multiple cloud layers
@@ -494,18 +824,29 @@
                 }
                 
                 context.globalCompositeOperation = 'source-over';
+                console.log('✅ Clouds drawn successfully');
             }
             
+            console.log('🎯 About to draw clouds...');
             drawClouds();
             
+            // Create texture and set as scene background
             const texture = new THREE.CanvasTexture(canvas);
-            const skyMaterial = new THREE.MeshBasicMaterial({
-                map: texture,
-                side: THREE.BackSide
-            });
+            texture.mapping = THREE.EquirectangularReflectionMapping;
+            texture.needsUpdate = true;
             
-            const skybox = new THREE.Mesh(skyGeometry, skyMaterial);
-            scene.add(skybox);
+            console.log('🖼️ Texture created, applying to scene...');
+            
+            // Set as scene background (this is more reliable than sphere method)
+            scene.background = texture;
+            console.log('🌅 Sunset skybox with clouds applied to scene background');
+            
+            // Verify the scene background was set
+            if (scene.background === texture) {
+                console.log('✅ Scene background successfully set to sunset texture');
+            } else {
+                console.error('❌ Failed to set scene background');
+            }
         }
 
         function init() {
@@ -525,8 +866,35 @@
             
             document.body.appendChild(renderer.domElement);
             
+            // Ensure the canvas can receive focus for keyboard events
+            renderer.domElement.tabIndex = 0;
+            renderer.domElement.focus();
+            renderer.domElement.style.outline = 'none'; // Remove focus outline
+            
+            // Add click to focus functionality
+            renderer.domElement.addEventListener('click', () => {
+                renderer.domElement.focus();
+                console.log('🎯 Canvas focused - keyboard input should work now');
+            });
+            
+            // Add a focus indicator for debugging
+            renderer.domElement.addEventListener('focus', () => {
+                console.log('🎯 Canvas has focus - keys should work');
+                renderer.domElement.style.border = '2px solid green';
+                setTimeout(() => {
+                    renderer.domElement.style.border = 'none';
+                }, 1000);
+            });
+            
+            renderer.domElement.addEventListener('blur', () => {
+                console.log('⚠️ Canvas lost focus - click to regain focus');
+            });
+            
             // Initialize GLB loader
             gltfLoader = new THREE.GLTFLoader();
+            
+            // Initialize texture loader
+            textureLoader = new THREE.TextureLoader();
             
             // Sunset lighting setup
             const ambientLight = new THREE.AmbientLight(0xffa366, 0.4); // Warm orange ambient
@@ -558,7 +926,18 @@
             createTrack('parkrug');
             createPlayerCar();
             
+            // Initialize car display
+            setTimeout(() => {
+                updateCarDisplay();
+            }, 200);
+            
             window.addEventListener('resize', onWindowResize);
+            
+            // Add event listeners to the canvas specifically for better focus
+            renderer.domElement.addEventListener('keydown', onKeyDown);
+            renderer.domElement.addEventListener('keyup', onKeyUp);
+            
+            // Also add to document as backup
             document.addEventListener('keydown', onKeyDown);
             document.addEventListener('keyup', onKeyUp);
             
@@ -626,22 +1005,40 @@
                     (gltf) => {
                         const model = gltf.scene;
                         
-                        // Scale the model to make it larger
-                        model.scale.set(3, 3, 3);
+                        // Apply car-specific scaling and adjustments
+                        if (currentCar.name === 'Batmobile Tumbler') {
+                            model.scale.set(1.5, 1.5, 1.5); // Smaller scale for Tumbler
+                        } else {
+                            model.scale.set(3, 3, 3); // Default scale for other cars
+                        }
                         
-                        // Rotate GT3 car 180 degrees if it's the GT3 model
+                        // Apply car-specific rotations
                         if (currentCar.name === 'GT3 Porsche') {
                             model.rotation.y = Math.PI; // 180 degrees
+                        } else if (currentCar.name === 'Batmobile Tumbler') {
+                            model.rotation.y = Math.PI * 1.5; // 270 degrees (180 + 90)
+                        } else if (currentCar.name === 'Batmobile 1989') {
+                            model.rotation.y = Math.PI / 2; // 90 degrees
+                        } else if (currentCar.name === 'Lamborghini Diablo') {
+                            model.rotation.y = Math.PI * 2; // 360 degrees (equivalent to 0)
+                        } else if (currentCar.name === 'Dodge Hellcat') {
+                            model.rotation.y = Math.PI * 2; // 360 degrees (equivalent to 0)
                         }
-                        // MB car uses default rotation (0)
+                        // Other cars (MB) use default rotation (0)
                         
                         // Center the model and lift it up so wheels touch ground
                         const box = new THREE.Box3().setFromObject(model);
                         const center = box.getCenter(new THREE.Vector3());
                         const size = box.getSize(new THREE.Vector3());
                         
-                        // Center horizontally but lift vertically
-                        model.position.set(-center.x, -box.min.y + 0.2, -center.z);
+                        // Car-specific positioning adjustments
+                        if (currentCar.name === 'Batmobile Tumbler') {
+                            // Lower Tumbler much deeper into the ground for visibility
+                            model.position.set(-center.x, -box.min.y - 10.0, -center.z);
+                        } else {
+                            // Standard positioning for other cars
+                            model.position.set(-center.x, -box.min.y + 0.2, -center.z);
+                        }
                         
                         // Configure the model
                         model.traverse((child) => {
@@ -745,59 +1142,69 @@
             carGroup.userData.wheels = wheels;
         }
 
-        function createTrack(type) {
+        function createTrack(type, customMapData = null) {
             trackObjects.forEach(obj => scene.remove(obj));
             trackObjects = [];
             
-            // Load the PARKRUG map instead of creating procedural track
-            if (gltfLoader) {
-                gltfLoader.load(
-                    'PARKRUG/traffic_rug/scene.gltf',
-                    (gltf) => {
-                        const mapModel = gltf.scene;
-                        
-                        // Scale the map up by 500x to make it large
-                        mapModel.scale.set(500, 500, 500);
-                        
-                        // Flatten the map by removing any rotation/tilt and centering
-                        mapModel.rotation.set(0, 0, 0);
-                        mapModel.position.set(0, 0, 0); // Center and ensure it's at ground level
-                        
-                        // Force flatten all child meshes
-                        mapModel.traverse((child) => {
-                            if (child.isMesh) {
-                                child.rotation.set(0, 0, 0);
-                                // Reset any local transformations that might cause tilting
-                                child.position.y = Math.max(child.position.y, 0);
+            if (customMapData) {
+                // Load custom uploaded map
+                loadCustomMap(customMapData);
+                isCustomMap = true;
+            } else if (type === 'parkrug') {
+                // Load the PARKRUG map instead of creating procedural track
+                if (gltfLoader) {
+                    gltfLoader.load(
+                        'PARKRUG/traffic_rug/scene.gltf',
+                        (gltf) => {
+                            const mapModel = gltf.scene;
+                            
+                            // Scale the map up by current scale value
+                            mapModel.scale.set(mapScale, mapScale, mapScale);
+                            
+                            // Flatten the map by removing any rotation/tilt and centering
+                            mapModel.rotation.set(0, 0, 0);
+                            mapModel.position.set(0, 0, 0); // Center and ensure it's at ground level
+                            
+                            // Force flatten all child meshes
+                            mapModel.traverse((child) => {
+                                if (child.isMesh) {
+                                    child.rotation.set(0, 0, 0);
+                                    // Reset any local transformations that might cause tilting
+                                    child.position.y = Math.max(child.position.y, 0);
+                                }
+                            });
+                            
+                            // Configure the map model
+                            mapModel.traverse((child) => {
+                                if (child.isMesh) {
+                                    child.receiveShadow = true;
+                                    child.castShadow = true;
+                                }
+                            });
+                            
+                            // Add map to scene
+                            scene.add(mapModel);
+                            trackObjects.push(mapModel);
+                            currentMap = mapModel;
+                            isCustomMap = false;
+                            
+                            console.log(`PARKRUG map loaded successfully (scaled ${mapScale}x, flattened)`);
+                        },
+                        (progress) => {
+                            if (progress.total > 0) {
+                                const percent = (progress.loaded / progress.total * 100).toFixed(2);
+                                console.log(`Loading map: ${percent}%`);
                             }
-                        });
-                        
-                        // Configure the map model
-                        mapModel.traverse((child) => {
-                            if (child.isMesh) {
-                                child.receiveShadow = true;
-                                child.castShadow = true;
-                            }
-                        });
-                        
-                        // Add map to scene
-                        scene.add(mapModel);
-                        trackObjects.push(mapModel);
-                        
-                        console.log('PARKRUG map loaded successfully (scaled 500x, flattened)');
-                    },
-                    (progress) => {
-                        if (progress.total > 0) {
-                            const percent = (progress.loaded / progress.total * 100).toFixed(2);
-                            console.log(`Loading map: ${percent}%`);
+                        },
+                        (error) => {
+                            console.error('Error loading PARKRUG map:', error);
+                            console.log('Creating fallback ground plane');
+                            createFallbackGround();
                         }
-                    },
-                    (error) => {
-                        console.error('Error loading PARKRUG map:', error);
-                        console.log('Creating fallback ground plane');
-                        createFallbackGround();
-                    }
-                );
+                    );
+                } else {
+                    createFallbackGround();
+                }
             } else {
                 createFallbackGround();
             }
@@ -813,6 +1220,76 @@
             ground.receiveShadow = true;
             scene.add(ground);
             trackObjects.push(ground);
+            currentMap = ground;
+            isCustomMap = false;
+        }
+        
+        function loadCustomMap(mapData) {
+            console.log('🗺️ Loading custom map...');
+            
+            if (gltfLoader) {
+                gltfLoader.parse(
+                    mapData,
+                    '', // Base URL (empty for blob data)
+                    (gltf) => {
+                        const mapModel = gltf.scene;
+                        
+                        // Apply current scale
+                        mapModel.scale.set(mapScale, mapScale, mapScale);
+                        
+                        // Center and flatten the map
+                        mapModel.rotation.set(0, 0, 0);
+                        mapModel.position.set(0, 0, 0);
+                        
+                        // Force flatten all child meshes
+                        mapModel.traverse((child) => {
+                            if (child.isMesh) {
+                                child.rotation.set(0, 0, 0);
+                                child.position.y = Math.max(child.position.y, 0);
+                                child.receiveShadow = true;
+                                child.castShadow = true;
+                            }
+                        });
+                        
+                        // Add map to scene
+                        scene.add(mapModel);
+                        trackObjects.push(mapModel);
+                        currentMap = mapModel;
+                        isCustomMap = true;
+                        
+                        console.log('✅ Custom map loaded successfully!');
+                    },
+                    (error) => {
+                        console.error('❌ Error loading custom map:', error);
+                        alert('Error loading custom map. Please check the file format and try again.');
+                        createFallbackGround();
+                    }
+                );
+            } else {
+                console.error('❌ GLTF loader not available');
+                createFallbackGround();
+            }
+        }
+        
+        function loadDefaultMap() {
+            console.log('🏠 Loading default map...');
+            createTrack('parkrug');
+        }
+        
+        function clearMap() {
+            console.log('🗑️ Clearing map...');
+            trackObjects.forEach(obj => scene.remove(obj));
+            trackObjects = [];
+            currentMap = null;
+            isCustomMap = false;
+            createFallbackGround();
+        }
+        
+        function updateMapScale() {
+            if (currentMap && trackObjects.length > 0) {
+                console.log(`🔄 Updating map scale to ${mapScale}x`);
+                currentMap.scale.set(mapScale, mapScale, mapScale);
+            }
         }
 
 
@@ -826,6 +1303,17 @@
                 if (nitroTimeLeft <= 0) {
                     nitroActive = false;
                     nitroTimeLeft = 0;
+                    nitroFading = true; // Start fading
+                    nitroFadeProgress = 0;
+                }
+            }
+            
+            // Handle nitro fade out
+            if (nitroFading) {
+                nitroFadeProgress += 0.016 / NITRO_FADE_DURATION; // Increase fade progress
+                if (nitroFadeProgress >= 1.0) {
+                    nitroFading = false;
+                    nitroFadeProgress = 0;
                 }
             }
             
@@ -837,38 +1325,57 @@
             
             const brakePower = 0.3;
             
+            // Get current car's custom properties
+            const currentCar = availableCars[currentCarIndex];
+            let carAcceleration = currentCar.acceleration || 0.05;
+            const carTopSpeed = currentCar.topSpeed || 1;
+            
+            // Calculate smooth nitro multiplier that fades out gradually
+            let nitroMultiplier = 1.0;
+            if (nitroActive) {
+                nitroMultiplier = NITRO_MULTIPLIER; // Full nitro
+            } else if (nitroFading) {
+                // Smoothly interpolate from full nitro to no nitro
+                nitroMultiplier = NITRO_MULTIPLIER * (1.0 - nitroFadeProgress);
+            }
+            
+            // Apply nitro boost to acceleration
+            carAcceleration *= nitroMultiplier;
+            
             let acceleration = 0;
             let turnSpeed = 0.02;
             
-            // Keyboard controls
-            if (keys['w'] || keys['arrowup']) {
-                acceleration = enginePower / 1000; // Forward
-            }
-            if (keys['s'] || keys['arrowdown']) {
-                acceleration = -enginePower / 1000; // Backward
-                currentSpeed *= 0.95;
-            }
-            
-            if (keys['a'] || keys['arrowleft']) {
-                turnSpeed *= (1 + currentSpeed / 150);
-                carRotation += turnSpeed;
-            }
-            if (keys['d'] || keys['arrowright']) {
-                turnSpeed *= (1 + currentSpeed / 150);
-                carRotation -= turnSpeed;
-            }
-            
-            if (keys[' '] && currentSpeed > 20) {
-                carRotation += (keys['a'] || keys['arrowleft'] ? 0.06 : keys['d'] || keys['arrowright'] ? -0.06 : 0);
+            // Keyboard controls (only when not in free camera mode)
+            if (!freeCameraMode) {
+                if (keys['w'] || keys['arrowup']) {
+                    acceleration = carAcceleration; // Use car's custom acceleration
+                }
+                if (keys['s'] || keys['arrowdown']) {
+                    acceleration = -carAcceleration; // Use car's custom acceleration
+                    currentSpeed *= 0.95;
+                }
+                
+                if (keys['a'] || keys['arrowleft']) {
+                    turnSpeed *= (1 + currentSpeed / 150);
+                    carRotation += turnSpeed;
+                }
+                if (keys['d'] || keys['arrowright']) {
+                    turnSpeed *= (1 + currentSpeed / 150);
+                    carRotation -= turnSpeed;
+                }
+                
+                if (keys[' '] && currentSpeed > 20) {
+                    carRotation += (keys['a'] || keys['arrowleft'] ? 0.06 : keys['d'] || keys['arrowright'] ? -0.06 : 0);
+                }
             }
             
             // Mobile controls (joystick)
             if (joystickActive) {
                 // Forward/backward based on joystick Y
                 if (joystickInput.y > 0.1) {
-                    acceleration = enginePower / 1000 * joystickInput.y; // Forward
+                    acceleration = carAcceleration * joystickInput.y; // Use car's custom acceleration
                 } else if (joystickInput.y < -0.1) {
-                    acceleration = enginePower / 1000 * joystickInput.y; // Backward
+                    acceleration = carAcceleration * joystickInput.y; // Use car's custom acceleration
                     currentSpeed *= 0.95;
                 }
                 
@@ -877,6 +1384,14 @@
                     turnSpeed *= (1 + currentSpeed / 150);
                     carRotation -= turnSpeed * joystickInput.x;
                 }
+            }
+            
+            // Mobile nitro button
+            if (mobileNitro && !nitroActive && nitroTimeLeft === 0 && !nitroFading) {
+                nitroActive = true;
+                nitroTimeLeft = NITRO_DURATION;
+                nitroFading = false;
+                nitroFadeProgress = 0;
             }
             
             // Mobile brake button
@@ -896,10 +1411,41 @@
             carVelocity.add(forward.multiplyScalar(acceleration));
             carVelocity.multiplyScalar(0.985);
             
-            currentSpeed = carVelocity.length() * 100;
+            // Apply speed limit based on car's top speed (increased scaling for higher speeds)
+            let maxSpeed = carTopSpeed * 2.5; // Increased scaling factor for higher speeds
+            
+            // Apply smooth nitro boost to max speed
+            maxSpeed *= nitroMultiplier;
+            
+            if (carVelocity.length() > maxSpeed) {
+                carVelocity.normalize().multiplyScalar(maxSpeed);
+            }
+            
+            currentSpeed = carVelocity.length() * 120; // Increased multiplier for speed display
             
             playerCar.position.add(carVelocity);
             playerCar.rotation.y = carRotation;
+            
+            // Jump physics for Batmobile Tumbler
+            if (availableCars[currentCarIndex].name === 'Batmobile Tumbler') {
+                if (isJumping) {
+                    // Apply jump velocity to Y position
+                    playerCar.position.y += jumpVelocity;
+                    // Apply gravity
+                    jumpVelocity -= GRAVITY;
+                    
+                    // Check if landed (back to or below ground level)
+                    if (playerCar.position.y <= groundLevel) {
+                        playerCar.position.y = groundLevel;
+                        isJumping = false;
+                        jumpVelocity = 0;
+                        console.log('🦇 Batmobile Tumbler Landed!');
+                    }
+                } else {
+                    // Store current ground level when not jumping
+                    groundLevel = playerCar.position.y;
+                }
+            }
             
             if (playerCar.userData.wheels) {
                 playerCar.userData.wheels.forEach(wheel => {
@@ -917,32 +1463,85 @@
             cameraOffsetX = THREE.MathUtils.lerp(cameraOffsetX, targetOffsetX, 0.1);
             cameraOffsetY = THREE.MathUtils.lerp(cameraOffsetY, targetOffsetY, 0.1);
             
-            // Calculate desired camera distance based on speed
+            // Calculate desired camera distance based on speed and car type
             const speedFactor = Math.min(currentSpeed / 100, 1);
-            const desiredDistance = MIN_CAMERA_DISTANCE + (MAX_CAMERA_DISTANCE - MIN_CAMERA_DISTANCE) * speedFactor * 0.6;
             
-            // Calculate base camera position behind the car
-            const baseAngle = carRotation + cameraOffsetX * 0.01; // Add horizontal offset
-            const baseHeight = CAMERA_HEIGHT + cameraOffsetY * 0.01; // Add vertical offset
+            // Car-specific camera distances
+            let minDistance = MIN_CAMERA_DISTANCE;
+            let maxDistance = MAX_CAMERA_DISTANCE;
             
-            const targetCamPos = new THREE.Vector3(
-                playerCar.position.x - Math.sin(baseAngle) * desiredDistance,
-                playerCar.position.y + baseHeight,
-                playerCar.position.z - Math.cos(baseAngle) * desiredDistance
-            );
-            
-            // Smoothly interpolate camera position
-            camera.position.lerp(targetCamPos, 0.15);
-            
-            // Ensure camera doesn't get too far from the car
-            const actualDistance = camera.position.distanceTo(playerCar.position);
-            if (actualDistance > MAX_CAMERA_DISTANCE) {
-                const direction = new THREE.Vector3().subVectors(camera.position, playerCar.position).normalize();
-                camera.position.copy(playerCar.position).add(direction.multiplyScalar(MAX_CAMERA_DISTANCE));
+            if (availableCars[currentCarIndex].name === 'Batmobile Tumbler') {
+                // Much further camera for Batmobile Tumbler
+                minDistance = 30;  // 30 units away minimum
+                maxDistance = 30;  // 30 units away maximum (constant distance)
             }
             
-            // Look directly at the car (pointing down towards it)
-            camera.lookAt(playerCar.position.x, playerCar.position.y, playerCar.position.z);
+            const desiredDistance = minDistance + (maxDistance - minDistance) * speedFactor * 0.6;
+            
+            // Calculate camera position with car-specific positioning
+            let targetCamPos;
+            
+            if (availableCars[currentCarIndex].name === 'Batmobile Tumbler') {
+                // Shallower topological view for Batmobile Tumbler - 31 degree angle
+                const topHeight = 300; // Camera height
+                const behindDistance = 500; // Distance behind for ~31° angle
+                
+                targetCamPos = new THREE.Vector3(
+                    playerCar.position.x - Math.sin(carRotation) * behindDistance,
+                    playerCar.position.y + topHeight,
+                    playerCar.position.z - Math.cos(carRotation) * behindDistance
+                );
+            } else {
+                // Standard behind-car camera for other vehicles
+                const baseAngle = carRotation + cameraOffsetX * 0.01; // Add horizontal offset
+                const baseHeight = CAMERA_HEIGHT + cameraOffsetY * 0.01; // Add vertical offset
+                
+                targetCamPos = new THREE.Vector3(
+                    playerCar.position.x - Math.sin(baseAngle) * desiredDistance,
+                    playerCar.position.y + baseHeight,
+                    playerCar.position.z - Math.cos(baseAngle) * desiredDistance
+                );
+            }
+            
+            // Handle camera positioning based on mode
+            if (freeCameraMode) {
+                // Free camera mode - use WASD for movement with full 3D flight
+                const moveSpeed = 1.5;
+                const camera_forward = new THREE.Vector3();
+                const camera_right = new THREE.Vector3();
+                const camera_up = new THREE.Vector3(0, 1, 0);
+                
+                // Get camera's forward and right vectors for relative movement
+                camera.getWorldDirection(camera_forward);
+                camera_right.crossVectors(camera_forward, camera_up).normalize();
+                
+                // WASD movement relative to camera orientation
+                if (keys['w']) freeCameraPosition.add(camera_forward.clone().multiplyScalar(moveSpeed));
+                if (keys['s']) freeCameraPosition.add(camera_forward.clone().multiplyScalar(-moveSpeed));
+                if (keys['a']) freeCameraPosition.add(camera_right.clone().multiplyScalar(-moveSpeed));
+                if (keys['d']) freeCameraPosition.add(camera_right.clone().multiplyScalar(moveSpeed));
+                if (keys['q']) freeCameraPosition.y += moveSpeed; // Fly up
+                if (keys['e']) freeCameraPosition.y -= moveSpeed; // Fly down
+                
+                camera.position.copy(freeCameraPosition);
+                
+                // Apply rotation to camera (mouse control handles rotation in onMouseMove)
+                camera.rotation.copy(freeCameraRotation);
+            } else {
+                // Standard car-following camera
+                // Smoothly interpolate camera position
+                camera.position.lerp(targetCamPos, 0.15);
+                
+                // Ensure camera doesn't get too far from the car (using car-specific max distance)
+                const actualDistance = camera.position.distanceTo(playerCar.position);
+                if (actualDistance > maxDistance) {
+                    const direction = new THREE.Vector3().subVectors(camera.position, playerCar.position).normalize();
+                    camera.position.copy(playerCar.position).add(direction.multiplyScalar(maxDistance));
+                }
+                
+                // Look directly at the car (pointing down towards it)
+                camera.lookAt(playerCar.position.x, playerCar.position.y, playerCar.position.z);
+            }
             
             // Update UI displays
             document.getElementById('speedValue').textContent = Math.round(currentSpeed);
@@ -951,17 +1550,19 @@
         
         function updateNitroDisplay() {
             const nitroFill = document.getElementById('nitroFill');
-            const nitroTime = document.getElementById('nitroTime');
             const nitroDisplay = document.getElementById('nitroDisplay');
             
             if (nitroActive) {
                 const percentage = (nitroTimeLeft / NITRO_DURATION) * 100;
                 nitroFill.style.width = percentage + '%';
-                nitroTime.textContent = Math.ceil(nitroTimeLeft) + 's';
+                nitroDisplay.classList.add('nitro-active');
+            } else if (nitroFading) {
+                // Show fading progress
+                const fadePercentage = (1.0 - nitroFadeProgress) * 100;
+                nitroFill.style.width = fadePercentage + '%';
                 nitroDisplay.classList.add('nitro-active');
             } else {
                 nitroFill.style.width = '100%';
-                nitroTime.textContent = 'READY';
                 nitroDisplay.classList.remove('nitro-active');
             }
         }
@@ -969,15 +1570,47 @@
         function onKeyDown(e) {
             keys[e.key.toLowerCase()] = true;
             
-            // Car switching with T key
+            // Debug all key presses with extra detail
+            console.log('🔍 Key pressed:', e.key, 'Code:', e.code, 'Target:', e.target.tagName, 'Active element:', document.activeElement.tagName);
+            
+            // Developer menu toggle with 0 key - prevent default and stop propagation
+            if (e.key === '0') {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('🛠️ 0 key detected - preventing default and toggling menu');
+                toggleDeveloperMenu();
+                return;
+            }
+            
+            // Car switching with T key (cycles through all cars)
             if (e.key.toLowerCase() === 't') {
                 switchCar();
             }
             
-            // Nitro activation
-            if (e.key === 'Shift' && !nitroActive && nitroTimeLeft === 0) {
+            // Direct car selection with number keys 1-6
+            if (e.key >= '1' && e.key <= '6') {
+                const targetIndex = parseInt(e.key) - 1;
+                if (targetIndex < availableCars.length) {
+                    switchToSpecificCar(targetIndex);
+                }
+            }
+            
+            // Nitro activation - only Shift keys (removed N key)
+            if ((e.key === 'Shift' || e.code === 'ShiftLeft' || e.code === 'ShiftRight') && !nitroActive && nitroTimeLeft === 0 && !nitroFading) {
+                console.log('🚀 NITRO ACTIVATED! Key:', e.key, 'Code:', e.code);
                 nitroActive = true;
                 nitroTimeLeft = NITRO_DURATION;
+                nitroFading = false;
+                nitroFadeProgress = 0;
+            }
+            
+            // Jump activation for Batmobile Tumbler (E key)
+            if (e.key.toLowerCase() === 'e' && availableCars[currentCarIndex].name === 'Batmobile Tumbler') {
+                if (!isJumping) {
+                    isJumping = true;
+                    jumpVelocity = JUMP_POWER;
+                    console.log('🦇 Batmobile Tumbler Jump!');
+                }
             }
         }
         
@@ -1009,14 +1642,64 @@
             }, 100);
         }
         
+        function switchToSpecificCar(targetIndex) {
+            // Don't switch if already using this car
+            if (currentCarIndex === targetIndex) {
+                console.log(`Already using: ${availableCars[currentCarIndex].name}`);
+                return;
+            }
+            
+            // Store current car position and rotation
+            const currentPosition = playerCar ? playerCar.position.clone() : new THREE.Vector3(0, 0, 0);
+            const currentRotation = carRotation;
+            const currentVelocity = carVelocity.clone();
+            const currentSpeedValue = currentSpeed;
+            
+            // Switch to specific car
+            currentCarIndex = targetIndex;
+            
+            // Create new car
+            createPlayerCar();
+            
+            // Wait a moment for the car to load, then restore position
+            setTimeout(() => {
+                if (playerCar) {
+                    playerCar.position.copy(currentPosition);
+                    carRotation = currentRotation;
+                    carVelocity.copy(currentVelocity);
+                    currentSpeed = currentSpeedValue;
+                    playerCar.rotation.y = carRotation;
+                    
+                    console.log(`Switched to: ${availableCars[currentCarIndex].name} (Key ${targetIndex + 1})`);
+                    updateCarDisplay();
+                }
+            }, 100);
+        }
+        
         function updateCarDisplay() {
             document.getElementById('carName').textContent = availableCars[currentCarIndex].name;
+            
+            // Update car guide highlighting
+            const carListItems = document.querySelectorAll('#carGuide .car-list li');
+            carListItems.forEach((item, index) => {
+                if (index === currentCarIndex) {
+                    item.style.backgroundColor = 'rgba(255, 102, 0, 0.3)';
+                    item.style.borderLeft = '3px solid #ff6600';
+                    item.style.paddingLeft = '8px';
+                } else {
+                    item.style.backgroundColor = 'transparent';
+                    item.style.borderLeft = 'none';
+                    item.style.paddingLeft = '2px';
+                }
+            });
         }
         
         function activateNitro() {
-            if (!nitroActive && nitroTimeLeft === 0) {
+            if (!nitroActive && nitroTimeLeft === 0 && !nitroFading) {
                 nitroActive = true;
                 nitroTimeLeft = NITRO_DURATION;
+                nitroFading = false;
+                nitroFadeProgress = 0;
             }
         }
 
@@ -1035,9 +1718,24 @@
                 const deltaX = e.clientX - mouseX;
                 const deltaY = e.clientY - mouseY;
                 
-                // Update target offsets based on mouse movement (fix reversed controls)
-                targetOffsetX = Math.max(-200, Math.min(200, -deltaX)); // Reverse horizontal
-                targetOffsetY = Math.max(-100, Math.min(100, deltaY)); // Don't invert Y
+                if (freeCameraMode) {
+                    // Free camera mouse look controls
+                    const mouseSensitivity = 0.003;
+                    freeCameraRotation.y -= deltaX * mouseSensitivity;
+                    freeCameraRotation.x -= deltaY * mouseSensitivity;
+                    
+                    // Constrain vertical rotation to prevent flipping
+                    freeCameraRotation.x = Math.max(-Math.PI/2 + 0.1, Math.min(Math.PI/2 - 0.1, freeCameraRotation.x));
+                    
+                    // Update mouse position for next frame
+                    mouseX = e.clientX;
+                    mouseY = e.clientY;
+                } else {
+                    // Standard camera offset controls for follow mode
+                    // Update target offsets based on mouse movement (fix reversed controls)
+                    targetOffsetX = Math.max(-200, Math.min(200, -deltaX)); // Reverse horizontal
+                    targetOffsetY = Math.max(-100, Math.min(100, deltaY)); // Don't invert Y
+                }
             }
         }
         
@@ -1151,6 +1849,427 @@
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // Developer Menu Functions
+        let developerMenuOpen = false;
+        let freeCameraMode = false;
+        let freeCameraPosition = new THREE.Vector3();
+        let freeCameraRotation = new THREE.Euler();
+        
+        function toggleDeveloperMenu() {
+            console.log('🛠️ toggleDeveloperMenu called, current state:', developerMenuOpen);
+            const menu = document.getElementById('developerMenu');
+            console.log('🛠️ Menu element found:', !!menu);
+            
+            if (!menu) {
+                console.error('❌ Developer menu element not found!');
+                return;
+            }
+            
+            developerMenuOpen = !developerMenuOpen;
+            
+            if (developerMenuOpen) {
+                menu.style.display = 'block';
+                menu.style.visibility = 'visible';
+                menu.style.opacity = '1';
+                menu.style.zIndex = '9999';
+                console.log('🛠️ Menu OPENED - display:', menu.style.display);
+                initializeDeveloperMenu();
+            } else {
+                menu.style.display = 'none';
+                menu.style.visibility = 'hidden';
+                menu.style.opacity = '0';
+                console.log('🛠️ Menu CLOSED - display:', menu.style.display);
+            }
+            
+            console.log('🛠️ Final menu state - developerMenuOpen:', developerMenuOpen, 'computed style:', window.getComputedStyle(menu).display);
+        }
+        
+        function initializeDeveloperMenu() {
+            const carSettings = document.getElementById('carSettings');
+            carSettings.innerHTML = '';
+            
+            // Create controls for each vehicle
+            availableCars.forEach((car, index) => {
+                const carDiv = document.createElement('div');
+                carDiv.className = 'setting-group';
+                carDiv.innerHTML = `
+                    <h4 style="color: #00ff00; margin: 10px 0 5px 0;">${car.name}</h4>
+                    <label>Top Speed:</label>
+                    <input type="range" id="topSpeed${index}" min="0.1" max="2" step="0.1" value="${car.topSpeed || 1}">
+                    <input type="number" id="topSpeedValue${index}" value="${car.topSpeed || 1}" step="0.1">
+                    <label>Acceleration:</label>
+                    <input type="range" id="acceleration${index}" min="0.01" max="0.1" step="0.01" value="${car.acceleration || 0.05}">
+                    <input type="number" id="accelerationValue${index}" value="${car.acceleration || 0.05}" step="0.01">
+                `;
+                carSettings.appendChild(carDiv);
+                
+                // Add event listeners
+                const topSpeedRange = document.getElementById(`topSpeed${index}`);
+                const topSpeedValue = document.getElementById(`topSpeedValue${index}`);
+                const accelerationRange = document.getElementById(`acceleration${index}`);
+                const accelerationValue = document.getElementById(`accelerationValue${index}`);
+                
+                topSpeedRange.addEventListener('input', (e) => {
+                    const value = parseFloat(e.target.value);
+                    topSpeedValue.value = value;
+                    car.topSpeed = value;
+                });
+                
+                topSpeedValue.addEventListener('input', (e) => {
+                    const value = parseFloat(e.target.value);
+                    topSpeedRange.value = value;
+                    car.topSpeed = value;
+                });
+                
+                accelerationRange.addEventListener('input', (e) => {
+                    const value = parseFloat(e.target.value);
+                    accelerationValue.value = value;
+                    car.acceleration = value;
+                });
+                
+                accelerationValue.addEventListener('input', (e) => {
+                    const value = parseFloat(e.target.value);
+                    accelerationRange.value = value;
+                    car.acceleration = value;
+                });
+            });
+            
+            // Camera toggle
+            const cameraToggle = document.getElementById('cameraToggle');
+            const cameraMode = document.getElementById('cameraMode');
+            cameraToggle.addEventListener('change', (e) => {
+                freeCameraMode = e.target.checked;
+                cameraMode.textContent = freeCameraMode ? 'Free Camera' : 'Follow Car';
+                
+                if (freeCameraMode) {
+                    // Store current camera position and rotation
+                    freeCameraPosition.copy(camera.position);
+                    freeCameraRotation.copy(camera.rotation);
+                } else {
+                    // Reset to follow mode - camera will automatically position behind car
+                    camera.rotation.set(0, 0, 0);
+                }
+            });
+            
+            // Camera distance and height
+            setupRangeSync('cameraDistance', 'cameraDistanceValue');
+            setupRangeSync('cameraHeight', 'cameraHeightValue');
+            setupRangeSync('jumpPower', 'jumpPowerValue', (value) => {
+                window.JUMP_POWER = value;
+            });
+            setupRangeSync('gravity', 'gravityValue', (value) => {
+                window.GRAVITY = value;
+            });
+            setupRangeSync('mapScale', 'mapScaleValue', (value) => {
+                mapScale = value;
+                updateMapScale();
+            });
+            
+            // Map upload functionality
+            const mapUpload = document.getElementById('mapUpload');
+            mapUpload.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    console.log('📁 Map file selected:', file.name);
+                    
+                    // Check file type
+                    const validTypes = ['.gltf', '.glb'];
+                    const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+                    
+                    if (!validTypes.includes(fileExtension)) {
+                        alert('Please select a valid GLTF (.gltf) or GLB (.glb) file.');
+                        return;
+                    }
+                    
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const arrayBuffer = event.target.result;
+                        console.log('📖 File read successfully, size:', arrayBuffer.byteLength, 'bytes');
+                        createTrack('custom', arrayBuffer);
+                    };
+                    
+                    reader.onerror = (error) => {
+                        console.error('❌ Error reading file:', error);
+                        alert('Error reading the selected file.');
+                    };
+                    
+                    // Read as ArrayBuffer for GLB files or text for GLTF
+                    if (fileExtension === '.glb') {
+                        reader.readAsArrayBuffer(file);
+                    } else {
+                        reader.readAsArrayBuffer(file); // GLTF loader can handle both
+                    }
+                }
+            });
+            
+            // Texture upload functionality
+            const carTextureUpload = document.getElementById('carTextureUpload');
+            carTextureUpload.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    console.log('🎨 Car texture file selected:', file.name);
+                    
+                    // Check file type
+                    const validTypes = ['.jpg', '.jpeg', '.png'];
+                    const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+                    
+                    if (!validTypes.includes(fileExtension)) {
+                        alert('Please select a valid image file (.jpg, .jpeg, .png).');
+                        return;
+                    }
+                    
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const imageSrc = event.target.result;
+                        
+                        // Load texture using Three.js
+                        textureLoader.load(imageSrc, (texture) => {
+                            texture.wrapS = THREE.RepeatWrapping;
+                            texture.wrapT = THREE.RepeatWrapping;
+                            cachedCarTexture = texture;
+                            console.log('✅ Car texture loaded and cached successfully');
+                            alert('Car texture loaded! Use "Apply Texture to Current Car" to apply it.');
+                        }, undefined, (error) => {
+                            console.error('❌ Error loading car texture:', error);
+                            alert('Error loading car texture.');
+                        });
+                    };
+                    
+                    reader.onerror = (error) => {
+                        console.error('❌ Error reading texture file:', error);
+                        alert('Error reading the selected texture file.');
+                    };
+                    
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            const envTextureUpload = document.getElementById('envTextureUpload');
+            envTextureUpload.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    console.log('🌍 Environment texture file selected:', file.name);
+                    
+                    // Check file type
+                    const validTypes = ['.jpg', '.jpeg', '.png'];
+                    const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+                    
+                    if (!validTypes.includes(fileExtension)) {
+                        alert('Please select a valid image file (.jpg, .jpeg, .png).');
+                        return;
+                    }
+                    
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const imageSrc = event.target.result;
+                        
+                        // Load texture using Three.js
+                        textureLoader.load(imageSrc, (texture) => {
+                            texture.wrapS = THREE.RepeatWrapping;
+                            texture.wrapT = THREE.RepeatWrapping;
+                            cachedEnvTexture = texture;
+                            console.log('✅ Environment texture loaded and cached successfully');
+                            alert('Environment texture loaded! Use "Apply Environment Texture" to apply it.');
+                        }, undefined, (error) => {
+                            console.error('❌ Error loading environment texture:', error);
+                            alert('Error loading environment texture.');
+                        });
+                    };
+                    
+                    reader.onerror = (error) => {
+                        console.error('❌ Error reading texture file:', error);
+                        alert('Error reading the selected texture file.');
+                    };
+                    
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+        
+        function setupRangeSync(rangeId, valueId, callback) {
+            const range = document.getElementById(rangeId);
+            const value = document.getElementById(valueId);
+            
+            range.addEventListener('input', (e) => {
+                const val = parseFloat(e.target.value);
+                value.value = val;
+                if (callback) callback(val);
+            });
+            
+            value.addEventListener('input', (e) => {
+                const val = parseFloat(e.target.value);
+                range.value = val;
+                if (callback) callback(val);
+            });
+        }
+        
+        function resetToDefaults() {
+            // Reset car properties to the high-performance defaults
+            availableCars[0].topSpeed = 1.0; availableCars[0].acceleration = 0.045; // MB Car ~300 km/h
+            availableCars[1].topSpeed = 1.2; availableCars[1].acceleration = 0.055; // GT3 Porsche ~360 km/h
+            availableCars[2].topSpeed = 1.4; availableCars[2].acceleration = 0.065; // Batmobile Tumbler ~420 km/h
+            availableCars[3].topSpeed = 1.1; availableCars[3].acceleration = 0.050; // Batmobile 1989 ~330 km/h
+            availableCars[4].topSpeed = 1.3; availableCars[4].acceleration = 0.060; // Lamborghini Diablo ~390 km/h
+            availableCars[5].topSpeed = 1.15; availableCars[5].acceleration = 0.065; // Dodge Hellcat ~345 km/h
+            
+            // Reset world settings
+            window.JUMP_POWER = 10;
+            window.GRAVITY = 0.8;
+            
+            // Reset camera
+            freeCameraMode = false;
+            document.getElementById('cameraToggle').checked = false;
+            document.getElementById('cameraMode').textContent = 'Follow Car';
+            
+            // Reinitialize menu
+            if (developerMenuOpen) {
+                initializeDeveloperMenu();
+            }
+            
+            console.log('🔄 All settings reset to high-performance defaults');
+        }
+        
+        function saveSettings() {
+            const settings = {
+                cars: availableCars.map(car => ({
+                    name: car.name,
+                    topSpeed: car.topSpeed || 1,
+                    acceleration: car.acceleration || 0.05
+                })),
+                jumpPower: window.JUMP_POWER || 10,
+                gravity: window.GRAVITY || 0.8,
+                camera: {
+                    distance: document.getElementById('cameraDistance').value,
+                    height: document.getElementById('cameraHeight').value
+                }
+            };
+            
+            localStorage.setItem('carGameSettings', JSON.stringify(settings));
+            console.log('💾 Settings saved to localStorage');
+        }
+        
+        function loadSettings() {
+            const saved = localStorage.getItem('carGameSettings');
+            if (saved) {
+                const settings = JSON.parse(saved);
+                
+                // Apply car settings
+                settings.cars.forEach((savedCar, index) => {
+                    if (availableCars[index]) {
+                        availableCars[index].topSpeed = savedCar.topSpeed;
+                        availableCars[index].acceleration = savedCar.acceleration;
+                    }
+                });
+                
+                // Apply world settings
+                window.JUMP_POWER = settings.jumpPower;
+                window.GRAVITY = settings.gravity;
+                
+                // Reinitialize menu
+                if (developerMenuOpen) {
+                    initializeDeveloperMenu();
+                }
+                
+                console.log('📁 Settings loaded from localStorage');
+            } else {
+                console.log('❌ No saved settings found');
+            }
+        }
+
+        // Texture Management Functions
+        function applyCachedTexture() {
+            if (!cachedCarTexture) {
+                alert('No car texture loaded. Please upload a texture first.');
+                return;
+            }
+            
+            if (!playerCar) {
+                alert('No car is currently loaded.');
+                return;
+            }
+            
+            // Store original materials before applying texture
+            playerCar.traverse((child) => {
+                if (child.isMesh && child.material) {
+                    if (!originalCarMaterials.has(child.uuid)) {
+                        originalCarMaterials.set(child.uuid, child.material.clone());
+                    }
+                    
+                    // Apply the texture
+                    if (Array.isArray(child.material)) {
+                        child.material.forEach(mat => {
+                            mat.map = cachedCarTexture;
+                            mat.needsUpdate = true;
+                        });
+                    } else {
+                        child.material.map = cachedCarTexture;
+                        child.material.needsUpdate = true;
+                    }
+                }
+            });
+            
+            console.log('🎨 Car texture applied successfully');
+        }
+        
+        function resetCarTexture() {
+            if (!playerCar) {
+                alert('No car is currently loaded.');
+                return;
+            }
+            
+            // Restore original materials
+            playerCar.traverse((child) => {
+                if (child.isMesh && child.material) {
+                    const originalMaterial = originalCarMaterials.get(child.uuid);
+                    if (originalMaterial) {
+                        child.material = originalMaterial.clone();
+                    }
+                }
+            });
+            
+            console.log('🔄 Car texture reset to original');
+        }
+        
+        function applyCachedEnvTexture() {
+            if (!cachedEnvTexture) {
+                alert('No environment texture loaded. Please upload a texture first.');
+                return;
+            }
+            
+            if (!currentMap) {
+                alert('No map is currently loaded.');
+                return;
+            }
+            
+            // Apply texture to map elements
+            currentMap.traverse((child) => {
+                if (child.isMesh && child.material) {
+                    if (Array.isArray(child.material)) {
+                        child.material.forEach(mat => {
+                            mat.map = cachedEnvTexture;
+                            mat.needsUpdate = true;
+                        });
+                    } else {
+                        child.material.map = cachedEnvTexture;
+                        child.material.needsUpdate = true;
+                    }
+                }
+            });
+            
+            console.log('🌍 Environment texture applied successfully');
+        }
+        
+        function resetEnvTexture() {
+            if (!currentMap) {
+                alert('No map is currently loaded.');
+                return;
+            }
+            
+            // Reload the default map to reset textures
+            loadDefaultMap();
+            console.log('🔄 Environment texture reset to original');
         }
 
         init();
