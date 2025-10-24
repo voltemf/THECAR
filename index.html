@@ -740,7 +740,7 @@
 
         // Map management
         let currentMap = null;
-        let mapScale = 500;
+        let mapScale = 50; // Reduced from 500 to make map more reasonable size
         let isCustomMap = false;
 
         // Texture management
@@ -856,7 +856,7 @@
             createSkybox();
             
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
-            camera.position.set(0, 6, 12);
+            camera.position.set(0, 20, 50); // Higher and further back to see everything
             
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
@@ -923,6 +923,14 @@
             
             createTrack('parkrug');
             createPlayerCar();
+            
+            // Add a debug marker at origin to help see scale
+            const debugGeometry = new THREE.BoxGeometry(2, 2, 2);
+            const debugMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+            const debugCube = new THREE.Mesh(debugGeometry, debugMaterial);
+            debugCube.position.set(0, 1, 0);
+            scene.add(debugCube);
+            console.log('🎯 Debug red cube added at origin (0,1,0)');
             
             // Initialize car display
             setTimeout(() => {
@@ -1064,6 +1072,12 @@
                         // Add model to car group
                         carGroup.add(model);
                         console.log(`${currentCar.name} loaded successfully`);
+                        console.log(`Car position: x=${carGroup.position.x}, y=${carGroup.position.y}, z=${carGroup.position.z}`);
+                        console.log(`Car scale: x=${model.scale.x}, y=${model.scale.y}, z=${model.scale.z}`);
+                        
+                        // Reset camera to look at the car
+                        camera.position.set(0, 20, 50);
+                        camera.lookAt(carGroup.position);
                     },
                     (progress) => {
                         if (progress.total > 0) {
@@ -1088,7 +1102,10 @@
             playerCar = carGroup;
             
             // Reset camera to follow the car immediately
-            camera.position.set(0, CAMERA_HEIGHT, MIN_CAMERA_DISTANCE);
+            camera.position.set(0, 20, 50);
+            if (carGroup) {
+                camera.lookAt(carGroup.position);
+            }
             camera.lookAt(0, 0, 0);
             
             // Initialize displays
@@ -1187,6 +1204,8 @@
                             isCustomMap = false;
                             
                             console.log(`PARKRUG map loaded successfully (scaled ${mapScale}x, flattened)`);
+                            console.log(`Map position: x=${mapModel.position.x}, y=${mapModel.position.y}, z=${mapModel.position.z}`);
+                            console.log(`Map scale: x=${mapModel.scale.x}, y=${mapModel.scale.y}, z=${mapModel.scale.z}`);
                         },
                         (progress) => {
                             if (progress.total > 0) {
